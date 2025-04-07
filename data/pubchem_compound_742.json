@@ -1,0 +1,546 @@
+{
+  "PC_Compounds": [
+    {
+      "id": {
+        "id": {
+          "cid": 742
+        }
+      },
+      "atoms": {
+        "aid": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "element": [
+          8,
+          8,
+          8,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "bonds": {
+        "aid1": [
+          1,
+          1,
+          2,
+          3,
+          4,
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          6,
+          6,
+          7,
+          7,
+          7,
+          8
+        ],
+        "aid2": [
+          9,
+          18,
+          8,
+          9,
+          6,
+          15,
+          16,
+          6,
+          7,
+          10,
+          11,
+          8,
+          12,
+          9,
+          13,
+          14,
+          17
+        ],
+        "order": [
+          1,
+          1,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "stereo": [
+        {
+          "tetrahedral": {
+            "center": 6,
+            "above": 4,
+            "top": 5,
+            "bottom": 8,
+            "below": 12,
+            "parity": 3,
+            "type": 1
+          }
+        }
+      ],
+      "coords": [
+        {
+          "type": [
+            1,
+            5,
+            255
+          ],
+          "aid": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ],
+          "conformers": [
+            {
+              "x": [
+                6.8671,
+                4.269,
+                6.001,
+                2.5369,
+                4.269,
+                3.403,
+                5.135,
+                3.403,
+                6.001,
+                4.6675,
+                3.8705,
+                3.403,
+                4.7365,
+                5.5335,
+                2,
+                2.5369,
+                2.866,
+                7.404
+              ],
+              "y": [
+                0,
+                -1.5,
+                1.5,
+                0.5,
+                0.5,
+                0,
+                0,
+                -1,
+                0.5,
+                0.9749,
+                0.9749,
+                0.62,
+                -0.4749,
+                -0.4749,
+                0.19,
+                1.12,
+                -1.31,
+                0.31
+              ],
+              "style": {
+                "annotation": [
+                  3
+                ],
+                "aid1": [
+                  6
+                ],
+                "aid2": [
+                  4
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "charge": 0,
+      "props": [
+        {
+          "urn": {
+            "label": "Compound",
+            "name": "Canonicalized",
+            "datatype": 5,
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 1
+          }
+        },
+        {
+          "urn": {
+            "label": "Compound Complexity",
+            "datatype": 7,
+            "implementation": "E_COMPLEXITY",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 113
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Hydrogen Bond Acceptor",
+            "datatype": 5,
+            "implementation": "E_NHACCEPTORS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 4
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Hydrogen Bond Donor",
+            "datatype": 5,
+            "implementation": "E_NHDONORS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 2
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Rotatable Bond",
+            "datatype": 5,
+            "implementation": "E_NROTBONDS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 4
+          }
+        },
+        {
+          "urn": {
+            "label": "Fingerprint",
+            "name": "SubStructure Keys",
+            "datatype": 16,
+            "parameters": "extended 2",
+            "implementation": "E_SCREEN",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "binary": "00000371C0623000000000000000000000000000000000000000000000000000000000000000001E00100800000828E18006000800400200080008908800000000000000000081800000000012008000004000041000000000AC06000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Allowed",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "4-amino-5-oxo-pentanoic acid"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "CAS-like Style",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "4-amino-5-oxopentanoic acid"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Markup",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "4-amino-5-oxopentanoic acid"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Preferred",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "4-amino-5-oxopentanoic acid"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Systematic",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "4-azanyl-5-oxidanylidene-pentanoic acid"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Traditional",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "4-amino-5-keto-valeric acid"
+          }
+        },
+        {
+          "urn": {
+            "label": "InChI",
+            "name": "Standard",
+            "datatype": 1,
+            "version": "1.0.6",
+            "software": "InChI",
+            "source": "iupac.org",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "InChI=1S/C5H9NO3/c6-4(3-7)1-2-5(8)9/h3-4H,1-2,6H2,(H,8,9)"
+          }
+        },
+        {
+          "urn": {
+            "label": "InChIKey",
+            "name": "Standard",
+            "datatype": 1,
+            "version": "1.0.6",
+            "software": "InChI",
+            "source": "iupac.org",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "MPUUQNGXJSEWTF-UHFFFAOYSA-N"
+          }
+        },
+        {
+          "urn": {
+            "label": "Log P",
+            "name": "XLogP3-AA",
+            "datatype": 7,
+            "version": "3.0",
+            "source": "sioc-ccbg.ac.cn",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": -3.6
+          }
+        },
+        {
+          "urn": {
+            "label": "Mass",
+            "name": "Exact",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "131.058243149"
+          }
+        },
+        {
+          "urn": {
+            "label": "Molecular Formula",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C5H9NO3"
+          }
+        },
+        {
+          "urn": {
+            "label": "Molecular Weight",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "131.13"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Absolute",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2024.12.12"
+          },
+          "value": {
+            "sval": "C(CC(=O)O)C(C=O)N"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Canonical",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C(CC(=O)O)C(C=O)N"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Isomeric",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C(CC(=O)O)C(C=O)N"
+          }
+        },
+        {
+          "urn": {
+            "label": "Topological",
+            "name": "Polar Surface Area",
+            "datatype": 7,
+            "implementation": "E_TPSA",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 80.4
+          }
+        },
+        {
+          "urn": {
+            "label": "Weight",
+            "name": "MonoIsotopic",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "131.058243149"
+          }
+        }
+      ],
+      "count": {
+        "heavy_atom": 9,
+        "atom_chiral": 1,
+        "atom_chiral_def": 0,
+        "atom_chiral_undef": 1,
+        "bond_chiral": 0,
+        "bond_chiral_def": 0,
+        "bond_chiral_undef": 0,
+        "isotope_atom": 0,
+        "covalent_unit": 1,
+        "tautomers": -1
+      }
+    }
+  ]
+}

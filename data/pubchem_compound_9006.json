@@ -1,0 +1,538 @@
+{
+  "PC_Compounds": [
+    {
+      "id": {
+        "id": {
+          "cid": 9006
+        }
+      },
+      "atoms": {
+        "aid": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "element": [
+          17,
+          17,
+          14,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "bonds": {
+        "aid1": [
+          1,
+          2,
+          3,
+          3,
+          4,
+          4,
+          5,
+          5,
+          6,
+          6,
+          7,
+          7,
+          7,
+          8,
+          8,
+          9,
+          9,
+          10
+        ],
+        "aid2": [
+          3,
+          3,
+          4,
+          7,
+          5,
+          6,
+          8,
+          14,
+          9,
+          15,
+          11,
+          12,
+          13,
+          10,
+          16,
+          10,
+          17,
+          18
+        ],
+        "order": [
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "coords": [
+        {
+          "type": [
+            1,
+            5,
+            255
+          ],
+          "aid": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ],
+          "conformers": [
+            {
+              "x": [
+                4,
+                3,
+                3,
+                3,
+                3.866,
+                2.134,
+                2,
+                3.866,
+                2.134,
+                3,
+                2,
+                1.38,
+                2,
+                4.403,
+                1.597,
+                4.403,
+                1.597,
+                3
+              ],
+              "y": [
+                1,
+                2,
+                1,
+                0,
+                -0.5,
+                -0.5,
+                1,
+                -1.5,
+                -1.5,
+                -2,
+                1.62,
+                1,
+                0.38,
+                -0.19,
+                -0.19,
+                -1.81,
+                -1.81,
+                -2.62
+              ],
+              "style": {
+                "annotation": [
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8
+                ],
+                "aid1": [
+                  4,
+                  4,
+                  5,
+                  6,
+                  8,
+                  9
+                ],
+                "aid2": [
+                  5,
+                  6,
+                  8,
+                  9,
+                  10,
+                  10
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "charge": 0,
+      "props": [
+        {
+          "urn": {
+            "label": "Compound",
+            "name": "Canonicalized",
+            "datatype": 5,
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 1
+          }
+        },
+        {
+          "urn": {
+            "label": "Compound Complexity",
+            "datatype": 7,
+            "implementation": "E_COMPLEXITY",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 108
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Hydrogen Bond Acceptor",
+            "datatype": 5,
+            "implementation": "E_NHACCEPTORS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 0
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Hydrogen Bond Donor",
+            "datatype": 5,
+            "implementation": "E_NHDONORS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 0
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Rotatable Bond",
+            "datatype": 5,
+            "implementation": "E_NROTBONDS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 1
+          }
+        },
+        {
+          "urn": {
+            "label": "Fingerprint",
+            "name": "SubStructure Keys",
+            "datatype": 16,
+            "parameters": "extended 2",
+            "implementation": "E_SCREEN",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "binary": "00000371C06000080600000000000000000000000000000000003000000000000000000100000018100000002008008030007200800000018000204200000200002000000888000000880820228011108020002080000888070000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Allowed",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "dichloro-methyl-phenyl-silane"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "CAS-like Style",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "dichloro-methyl-phenylsilane"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Markup",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "dichloro-methyl-phenylsilane"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Preferred",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "dichloro-methyl-phenylsilane"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Systematic",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "bis(chloranyl)-methyl-phenyl-silane"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Traditional",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "dichloro-methyl-phenyl-silane"
+          }
+        },
+        {
+          "urn": {
+            "label": "InChI",
+            "name": "Standard",
+            "datatype": 1,
+            "version": "1.0.6",
+            "software": "InChI",
+            "source": "iupac.org",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "InChI=1S/C7H8Cl2Si/c1-10(8,9)7-5-3-2-4-6-7/h2-6H,1H3"
+          }
+        },
+        {
+          "urn": {
+            "label": "InChIKey",
+            "name": "Standard",
+            "datatype": 1,
+            "version": "1.0.6",
+            "software": "InChI",
+            "source": "iupac.org",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "GNEPOXWQWFSSOU-UHFFFAOYSA-N"
+          }
+        },
+        {
+          "urn": {
+            "label": "Mass",
+            "name": "Exact",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "189.9772322"
+          }
+        },
+        {
+          "urn": {
+            "label": "Molecular Formula",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C7H8Cl2Si"
+          }
+        },
+        {
+          "urn": {
+            "label": "Molecular Weight",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "191.13"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Absolute",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2024.12.12"
+          },
+          "value": {
+            "sval": "C[Si](C1=CC=CC=C1)(Cl)Cl"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Canonical",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C[Si](C1=CC=CC=C1)(Cl)Cl"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Isomeric",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C[Si](C1=CC=CC=C1)(Cl)Cl"
+          }
+        },
+        {
+          "urn": {
+            "label": "Topological",
+            "name": "Polar Surface Area",
+            "datatype": 7,
+            "implementation": "E_TPSA",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 0
+          }
+        },
+        {
+          "urn": {
+            "label": "Weight",
+            "name": "MonoIsotopic",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "189.9772322"
+          }
+        }
+      ],
+      "count": {
+        "heavy_atom": 10,
+        "atom_chiral": 0,
+        "atom_chiral_def": 0,
+        "atom_chiral_undef": 0,
+        "bond_chiral": 0,
+        "bond_chiral_def": 0,
+        "bond_chiral_undef": 0,
+        "isotope_atom": 0,
+        "covalent_unit": 1,
+        "tautomers": -1
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import { fromZodError } from "zod-validation-error";
 import path from "path";
 import fs from "fs";
 import { fetchRandomCompounds } from "./db/downloadPubChem";
+import { startBatchDownload, getDownloadProgress } from "./routes/download";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -111,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Download new compounds from PubChem
+  // Download new compounds from PubChem (original method - for smaller downloads)
   app.post("/api/download-compounds", async (req, res) => {
     try {
       // Set a default of 1000 compounds but allow customization
@@ -146,6 +147,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to start download process" });
     }
   });
+  
+  // Batch download 144,000 compounds (using detached child process)
+  app.post("/api/batch-download", startBatchDownload);
+  
+  // Get status of the batch download process
+  app.get("/api/batch-download/status", getDownloadProgress);
 
   return httpServer;
 }

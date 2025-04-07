@@ -1,0 +1,902 @@
+{
+  "PC_Compounds": [
+    {
+      "id": {
+        "id": {
+          "cid": 108043
+        }
+      },
+      "atoms": {
+        "aid": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57
+        ],
+        "element": [
+          16,
+          9,
+          8,
+          7,
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "bonds": {
+        "aid1": [
+          1,
+          1,
+          2,
+          3,
+          3,
+          4,
+          4,
+          4,
+          5,
+          5,
+          5,
+          6,
+          6,
+          7,
+          7,
+          7,
+          8,
+          8,
+          8,
+          9,
+          9,
+          9,
+          10,
+          10,
+          11,
+          11,
+          12,
+          12,
+          12,
+          13,
+          13,
+          13,
+          14,
+          14,
+          14,
+          16,
+          16,
+          16,
+          17,
+          17,
+          18,
+          18,
+          19,
+          20,
+          20,
+          21,
+          21,
+          22,
+          22,
+          23,
+          24,
+          24,
+          25,
+          25,
+          26,
+          26,
+          27,
+          27,
+          28,
+          28
+        ],
+        "aid2": [
+          15,
+          18,
+          29,
+          17,
+          24,
+          10,
+          11,
+          12,
+          7,
+          14,
+          15,
+          15,
+          19,
+          8,
+          9,
+          30,
+          10,
+          31,
+          32,
+          11,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          13,
+          39,
+          40,
+          16,
+          41,
+          42,
+          43,
+          44,
+          45,
+          17,
+          46,
+          47,
+          48,
+          49,
+          19,
+          20,
+          21,
+          22,
+          50,
+          23,
+          51,
+          23,
+          52,
+          53,
+          25,
+          26,
+          27,
+          54,
+          28,
+          55,
+          29,
+          56,
+          29,
+          57
+        ],
+        "order": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          2,
+          1,
+          2,
+          1,
+          1,
+          1
+        ]
+      },
+      "coords": [
+        {
+          "type": [
+            1,
+            5,
+            255
+          ],
+          "aid": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57
+          ],
+          "conformers": [
+            {
+              "x": [
+                4.6783,
+                15.2619,
+                11.2619,
+                7.7619,
+                6.2619,
+                4.6783,
+                6.7619,
+                7.7619,
+                6.2619,
+                8.2619,
+                6.7619,
+                8.2619,
+                9.2619,
+                6.7619,
+                5.2619,
+                9.7619,
+                10.7619,
+                3.732,
+                3.732,
+                2.866,
+                2.866,
+                2,
+                2,
+                12.2619,
+                12.7619,
+                12.7619,
+                13.7619,
+                13.7619,
+                14.2619,
+                7.0719,
+                8.3445,
+                7.6542,
+                5.7869,
+                5.7869,
+                8.7368,
+                8.7368,
+                6.1793,
+                6.8695,
+                7.6793,
+                8.3695,
+                9.8445,
+                9.1542,
+                7.2988,
+                7.0719,
+                6.2249,
+                9.1793,
+                9.8695,
+                11.3445,
+                10.6542,
+                2.866,
+                2.866,
+                1.4631,
+                1.4631,
+                12.4519,
+                12.4519,
+                14.0719,
+                14.0719
+              ],
+              "y": [
+                3.3358,
+                -2.6651,
+                -2.6651,
+                -0.067,
+                2.5311,
+                1.7264,
+                1.6651,
+                1.6651,
+                0.799,
+                0.799,
+                -0.067,
+                -0.933,
+                -0.933,
+                3.3971,
+                2.5311,
+                -1.799,
+                -1.799,
+                3.0311,
+                2.0311,
+                3.5311,
+                1.5311,
+                3.0311,
+                2.0311,
+                -2.6651,
+                -3.5311,
+                -1.799,
+                -3.5311,
+                -1.799,
+                -2.6651,
+                2.202,
+                1.8771,
+                2.2756,
+                1.1976,
+                0.4005,
+                0.4005,
+                1.1976,
+                -0.279,
+                -0.6776,
+                -1.1451,
+                -1.5436,
+                -0.721,
+                -0.3224,
+                3.0871,
+                3.934,
+                3.7071,
+                -2.0111,
+                -2.4096,
+                -1.587,
+                -1.1885,
+                4.1511,
+                0.9111,
+                3.3411,
+                1.7211,
+                -4.068,
+                -1.2621,
+                -4.068,
+                -1.2621
+              ],
+              "style": {
+                "annotation": [
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8,
+                  8
+                ],
+                "aid1": [
+                  1,
+                  1,
+                  6,
+                  6,
+                  18,
+                  18,
+                  19,
+                  20,
+                  21,
+                  22,
+                  24,
+                  24,
+                  25,
+                  26,
+                  27,
+                  28
+                ],
+                "aid2": [
+                  15,
+                  18,
+                  15,
+                  19,
+                  19,
+                  20,
+                  21,
+                  22,
+                  23,
+                  23,
+                  25,
+                  26,
+                  27,
+                  28,
+                  29,
+                  29
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "charge": 0,
+      "props": [
+        {
+          "urn": {
+            "label": "Compound",
+            "name": "Canonicalized",
+            "datatype": 5,
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 1
+          }
+        },
+        {
+          "urn": {
+            "label": "Compound Complexity",
+            "datatype": 7,
+            "implementation": "E_COMPLEXITY",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 483
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Hydrogen Bond Acceptor",
+            "datatype": 5,
+            "implementation": "E_NHACCEPTORS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 6
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Hydrogen Bond Donor",
+            "datatype": 5,
+            "implementation": "E_NHDONORS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 0
+          }
+        },
+        {
+          "urn": {
+            "label": "Count",
+            "name": "Rotatable Bond",
+            "datatype": 5,
+            "implementation": "E_NROTBONDS",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "ival": 8
+          }
+        },
+        {
+          "urn": {
+            "label": "Fingerprint",
+            "name": "SubStructure Keys",
+            "datatype": 16,
+            "parameters": "extended 2",
+            "implementation": "E_SCREEN",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "binary": "00000371E07B21004000000000000000000000000001600000003C608000000000005801F400001F0400000000082CE1D60E33D7B3081408A4012462640083F8A9612A3849983C3E6C988C26A2E4F99B863828ECC013C8E827B040000000000000000001000000000000000200000000000000"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Allowed",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "N-[1-[4-(4-fluorophenoxy)butyl]-4-piperidyl]-N-methyl-1,3-benzothiazol-2-amine"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "CAS-like Style",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "N-[1-[4-(4-fluorophenoxy)butyl]-4-piperidinyl]-N-methyl-1,3-benzothiazol-2-amine"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Markup",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "<I>N</I>-[1-[4-(4-fluorophenoxy)butyl]piperidin-4-yl]-<I>N</I>-methyl-1,3-benzothiazol-2-amine"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Preferred",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "N-[1-[4-(4-fluorophenoxy)butyl]piperidin-4-yl]-N-methyl-1,3-benzothiazol-2-amine"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Systematic",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "N-[1-[4-(4-fluoranylphenoxy)butyl]piperidin-4-yl]-N-methyl-1,3-benzothiazol-2-amine"
+          }
+        },
+        {
+          "urn": {
+            "label": "IUPAC Name",
+            "name": "Traditional",
+            "datatype": 1,
+            "version": "2.7.0",
+            "software": "Lexichem TK",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "1,3-benzothiazol-2-yl-[1-[4-(4-fluorophenoxy)butyl]-4-piperidyl]-methyl-amine"
+          }
+        },
+        {
+          "urn": {
+            "label": "InChI",
+            "name": "Standard",
+            "datatype": 1,
+            "version": "1.0.6",
+            "software": "InChI",
+            "source": "iupac.org",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "InChI=1S/C23H28FN3OS/c1-26(23-25-21-6-2-3-7-22(21)29-23)19-12-15-27(16-13-19)14-4-5-17-28-20-10-8-18(24)9-11-20/h2-3,6-11,19H,4-5,12-17H2,1H3"
+          }
+        },
+        {
+          "urn": {
+            "label": "InChIKey",
+            "name": "Standard",
+            "datatype": 1,
+            "version": "1.0.6",
+            "software": "InChI",
+            "source": "iupac.org",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "PZPXREFPAFDHNG-UHFFFAOYSA-N"
+          }
+        },
+        {
+          "urn": {
+            "label": "Log P",
+            "name": "XLogP3-AA",
+            "datatype": 7,
+            "version": "3.0",
+            "source": "sioc-ccbg.ac.cn",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 5.9
+          }
+        },
+        {
+          "urn": {
+            "label": "Mass",
+            "name": "Exact",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "413.19371186"
+          }
+        },
+        {
+          "urn": {
+            "label": "Molecular Formula",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "C23H28FN3OS"
+          }
+        },
+        {
+          "urn": {
+            "label": "Molecular Weight",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "413.6"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Absolute",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2024.12.12"
+          },
+          "value": {
+            "sval": "CN(C1CCN(CC1)CCCCOC2=CC=C(C=C2)F)C3=NC4=CC=CC=C4S3"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Canonical",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "CN(C1CCN(CC1)CCCCOC2=CC=C(C=C2)F)C3=NC4=CC=CC=C4S3"
+          }
+        },
+        {
+          "urn": {
+            "label": "SMILES",
+            "name": "Isomeric",
+            "datatype": 1,
+            "version": "2.3.0",
+            "software": "OEChem",
+            "source": "OpenEye Scientific Software",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "CN(C1CCN(CC1)CCCCOC2=CC=C(C=C2)F)C3=NC4=CC=CC=C4S3"
+          }
+        },
+        {
+          "urn": {
+            "label": "Topological",
+            "name": "Polar Surface Area",
+            "datatype": 7,
+            "implementation": "E_TPSA",
+            "version": "3.4.8.18",
+            "software": "Cactvs",
+            "source": "Xemistry GmbH",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "fval": 56.8
+          }
+        },
+        {
+          "urn": {
+            "label": "Weight",
+            "name": "MonoIsotopic",
+            "datatype": 1,
+            "version": "2.2",
+            "software": "PubChem",
+            "source": "ncbi.nlm.nih.gov",
+            "release": "2021.10.14"
+          },
+          "value": {
+            "sval": "413.19371186"
+          }
+        }
+      ],
+      "count": {
+        "heavy_atom": 29,
+        "atom_chiral": 0,
+        "atom_chiral_def": 0,
+        "atom_chiral_undef": 0,
+        "bond_chiral": 0,
+        "bond_chiral_def": 0,
+        "bond_chiral_undef": 0,
+        "isotope_atom": 0,
+        "covalent_unit": 1,
+        "tautomers": -1
+      }
+    }
+  ]
+}

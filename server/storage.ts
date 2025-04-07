@@ -288,9 +288,9 @@ export class MemStorage implements IStorage {
         fs.mkdirSync(this.dataPath, { recursive: true });
       }
       
-      // Get list of JSON files in the data directory
+      // Get list of JSON files in the data directory, only including compound files
       const files = fs.readdirSync(this.dataPath)
-        .filter(file => file.endsWith('.json'))
+        .filter(file => file.startsWith('pubchem_compound_') && file.endsWith('.json'))
         .map(file => path.join(this.dataPath, file));
       
       if (files.length === 0) {
@@ -299,41 +299,82 @@ export class MemStorage implements IStorage {
       }
       
       let loadedCount = 0;
+      let availableFiles = files;
       
-      for (const file of files) {
-        if (loadedCount >= limit) break;
+      // Skip files for compounds we already have in our database
+      if (this.compoundsByCid.size > 0) {
+        const existingCids = Array.from(this.compoundsByCid.keys());
+        availableFiles = files.filter(file => {
+          const filenameParts = path.basename(file).split('_');
+          const cidPart = filenameParts[filenameParts.length - 1].replace('.json', '');
+          const cid = parseInt(cidPart, 10);
+          return !isNaN(cid) && !existingCids.includes(cid);
+        });
         
-        const jsonData = await readJSON(file);
-        
-        // Process each compound in the JSON file
-        for (const compoundData of Array.isArray(jsonData) ? jsonData : [jsonData]) {
-          if (loadedCount >= limit) break;
-          
-          try {
-            // Process the raw compound data
-            const compound = await processCompoundData(compoundData);
-            
-            // Add to memory storage
-            const createdCompound = await this.createCompound(compound);
-            
-            // Add to Weaviate
-            await weaviateClient.addCompound(createdCompound);
-            
-            loadedCount++;
-            
-            // Mark as processed
-            createdCompound.isProcessed = true;
-            
-            if (loadedCount % 100 === 0) {
-              console.log(`Loaded ${loadedCount} compounds...`);
-            }
-          } catch (error) {
-            console.error(`Error processing compound:`, error);
-          }
-        }
+        console.log(`Filtered out ${files.length - availableFiles.length} files for compounds already in database`);
       }
       
-      console.log(`Successfully loaded ${loadedCount} compounds`);
+      // Sort files to ensure consistent loading order
+      availableFiles.sort();
+      
+      // Process files up to the limit
+      const filesToProcess = availableFiles.slice(0, limit);
+      console.log(`Processing ${filesToProcess.length} compound files...`);
+      
+      // Process in batches for better performance
+      const batchSize = 50;
+      for (let i = 0; i < filesToProcess.length; i += batchSize) {
+        const batch = filesToProcess.slice(i, i + batchSize);
+        
+        // Process batch in parallel
+        const batchPromises = batch.map(async (file) => {
+          try {
+            const jsonData = await readJSON(file);
+            
+            // Process each compound in the JSON file
+            for (const compoundData of Array.isArray(jsonData) ? jsonData : [jsonData]) {
+              try {
+                // Process the raw compound data
+                const compound = await processCompoundData(compoundData);
+                
+                // Check if we already have this compound
+                const existingCompound = await this.getCompound(compound.cid);
+                if (existingCompound) {
+                  console.log(`Compound CID ${compound.cid} already exists in database, skipping`);
+                  return null;
+                }
+                
+                // Add to memory storage
+                const createdCompound = await this.createCompound(compound);
+                
+                // Add to Weaviate
+                await weaviateClient.addCompound(createdCompound);
+                
+                // Mark as processed
+                createdCompound.isProcessed = true;
+                
+                return createdCompound;
+              } catch (error) {
+                console.error(`Error processing compound in file ${file}:`, error);
+                return null;
+              }
+            }
+          } catch (error) {
+            console.error(`Error processing file ${file}:`, error);
+            return null;
+          }
+        });
+        
+        // Wait for all compounds in the batch to be processed
+        const results = await Promise.all(batchPromises);
+        const successfulLoads = results.filter(Boolean);
+        loadedCount += successfulLoads.length;
+        
+        console.log(`Loaded batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(filesToProcess.length/batchSize)}: ${successfulLoads.length} compounds`);
+        console.log(`Total progress: ${loadedCount}/${limit} compounds loaded`);
+      }
+      
+      console.log(`Successfully loaded ${loadedCount} compounds into database`);
       return loadedCount;
     } catch (error) {
       console.error("Error loading PubChem data:", error);

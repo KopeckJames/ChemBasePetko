@@ -6,19 +6,70 @@ import path from 'path';
 const PUBCHEM_API_BASE_URL = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug';
 const DATA_PATH = path.join(process.cwd(), 'data');
 
-// Function to fetch a compound by CID
-async function fetchCompoundByCID(cid: number): Promise<any> {
-  try {
-    // Get the basic compound data
-    const response = await axios.get(`${PUBCHEM_API_BASE_URL}/compound/cid/${cid}/record/JSON`);
-    
-    // Save raw data to disk for later use (useful for debugging)
-    const data = response.data;
-    return data;
-  } catch (error) {
-    console.error(`Error fetching CID ${cid}:`, error);
-    return null;
+// Helper function to wait with exponential backoff
+async function waitWithBackoff(retryAttempt: number): Promise<void> {
+  // Start with 1 second, then 2, 4, 8, 16, etc.
+  // Cap at 30 seconds to prevent excessive waiting
+  const baseDelay = 1000;
+  const maxDelay = 30000;
+  const delay = Math.min(baseDelay * Math.pow(2, retryAttempt), maxDelay);
+  
+  // Add some randomness to prevent all retries happening at the same time
+  // This helps with API rate limits (jitter)
+  const jitter = Math.random() * 1000;
+  const totalDelay = delay + jitter;
+  
+  console.log(`Waiting ${Math.round(totalDelay/1000)} seconds before retry ${retryAttempt + 1}...`);
+  return new Promise(resolve => setTimeout(resolve, totalDelay));
+}
+
+// Function to fetch a compound by CID with retries
+async function fetchCompoundByCID(cid: number, maxRetries: number = 3): Promise<any> {
+  let retryAttempt = 0;
+  
+  while (retryAttempt <= maxRetries) {
+    try {
+      // Get the basic compound data
+      const response = await axios.get(`${PUBCHEM_API_BASE_URL}/compound/cid/${cid}/record/JSON`, {
+        // Set a timeout to prevent hanging requests
+        timeout: 30000,
+        // Add headers to identify our application
+        headers: {
+          'User-Agent': 'ChemBasePetko/1.0 (Chemical Compound Database; github.com/chembasepetko)'
+        }
+      });
+      
+      // Save raw data to disk for later use (useful for debugging)
+      const data = response.data;
+      return data;
+    } catch (error: any) {
+      // Check if this is a server error (5xx) which we should retry
+      const isServerError = error.response && error.response.status >= 500;
+      // Check if this is a rate limit error (429)
+      const isRateLimitError = error.response && error.response.status === 429;
+      
+      if ((isServerError || isRateLimitError) && retryAttempt < maxRetries) {
+        console.warn(`Attempt ${retryAttempt + 1}/${maxRetries} failed for CID ${cid}: ${error.message}`);
+        retryAttempt++;
+        
+        // Wait with exponential backoff before retrying
+        await waitWithBackoff(retryAttempt);
+      } else {
+        // Either we've exceeded retries or it's a non-retryable error
+        if (error.response && error.response.status === 404) {
+          console.log(`CID ${cid} not found (404)`);
+        } else if (error.response && error.response.status === 400) {
+          console.log(`Invalid CID ${cid} (400)`);
+        } else {
+          console.error(`Error fetching CID ${cid}:`, error.message);
+        }
+        return null;
+      }
+    }
   }
+  
+  console.error(`All ${maxRetries} retries failed for CID ${cid}`);
+  return null;
 }
 
 // Function to fetch a list of random compounds
