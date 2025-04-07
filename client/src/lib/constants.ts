@@ -2,7 +2,7 @@ export const APP_NAME = "ChemSearch";
 export const APP_DESCRIPTION = "Vector Database for PubChem Compounds";
 
 export const MOLECULAR_WEIGHT_OPTIONS = [
-  { value: "", label: "Molecular Weight" },
+  { value: "all", label: "Molecular Weight (All)" },
   { value: "lt_100", label: "< 100" },
   { value: "100-200", label: "100 - 200" },
   { value: "200-500", label: "200 - 500" },
@@ -10,7 +10,7 @@ export const MOLECULAR_WEIGHT_OPTIONS = [
 ];
 
 export const CHEMICAL_CLASS_OPTIONS = [
-  { value: "", label: "Chemical Class" },
+  { value: "all", label: "Chemical Class (All)" },
   { value: "aromatic", label: "Aromatic" },
   { value: "aliphatic", label: "Aliphatic" },
   { value: "heterocyclic", label: "Heterocyclic" },

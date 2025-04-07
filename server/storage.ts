@@ -73,10 +73,22 @@ export class MemStorage implements IStorage {
 
   async createCompound(insertCompound: InsertCompound): Promise<Compound> {
     const id = this.currentCompoundId++;
+    // Ensure null values for optional fields that might be undefined
     const compound: Compound = { 
       ...insertCompound, 
       id,
-      isProcessed: false
+      isProcessed: false,
+      iupacName: insertCompound.iupacName || null,
+      formula: insertCompound.formula || null,
+      molecularWeight: insertCompound.molecularWeight || null,
+      synonyms: insertCompound.synonyms || null,
+      description: insertCompound.description || null,
+      chemicalClass: insertCompound.chemicalClass || null,
+      inchi: insertCompound.inchi || null,
+      inchiKey: insertCompound.inchiKey || null,
+      smiles: insertCompound.smiles || null,
+      properties: insertCompound.properties || null,
+      imageUrl: insertCompound.imageUrl || null
     };
     
     this.compounds.set(id, compound);
@@ -113,11 +125,12 @@ export class MemStorage implements IStorage {
           (compound.description?.toLowerCase().includes(query.toLowerCase())) ||
           (compound.synonyms?.some(syn => syn.toLowerCase().includes(query.toLowerCase())));
         
-        // Apply molecular weight filter if specified
-        const matchesMolWeight = !molecularWeight || this.filterByMolecularWeight(compound, molecularWeight);
+        // Apply molecular weight filter if specified (ignore "all" value)
+        const matchesMolWeight = !molecularWeight || molecularWeight === "all" || 
+          this.filterByMolecularWeight(compound, molecularWeight);
         
-        // Apply chemical class filter if specified
-        const matchesChemClass = !chemicalClass || 
+        // Apply chemical class filter if specified (ignore "all" value)
+        const matchesChemClass = !chemicalClass || chemicalClass === "all" || 
           (compound.chemicalClass?.some(cls => cls.toLowerCase().includes(chemicalClass.toLowerCase())));
         
         return matchesKeyword && matchesMolWeight && matchesChemClass;
@@ -131,17 +144,20 @@ export class MemStorage implements IStorage {
       const paginatedCompounds = sortedCompounds.slice((page - 1) * limit, page * limit);
       
       // Convert to CompoundSearchResult format
-      results = paginatedCompounds.map(compound => ({
-        cid: compound.cid,
-        name: compound.name,
-        iupacName: compound.iupacName,
-        formula: compound.formula,
-        molecularWeight: compound.molecularWeight,
-        chemicalClass: compound.chemicalClass,
-        description: compound.description,
-        imageUrl: compound.imageUrl || this.getDefaultImageUrl(compound.cid),
-        similarity: 0 // No similarity score for keyword search
-      }));
+      results = paginatedCompounds.map(compound => {
+        // Convert from DB type (null) to API type (undefined)
+        return {
+          cid: compound.cid,
+          name: compound.name,
+          iupacName: compound.iupacName || undefined,
+          formula: compound.formula || undefined,
+          molecularWeight: compound.molecularWeight || undefined,
+          chemicalClass: compound.chemicalClass || undefined,
+          description: compound.description || undefined,
+          imageUrl: compound.imageUrl || this.getDefaultImageUrl(compound.cid),
+          similarity: 0 // No similarity score for keyword search
+        };
+      });
     }
     
     // Apply filters to semantic search results if needed
@@ -249,8 +265,8 @@ export class MemStorage implements IStorage {
           console.log(`Created data directory: ${this.dataPath}`);
         }
         
-        // Try to load some data
-        await this.loadPubChemData(1000);
+        // Try to load some data - limit to 20 compounds for faster startup
+        await this.loadPubChemData(20);
       }
       
       this.dataInitialized = true;

@@ -252,11 +252,11 @@ export async function semanticSearch(
     const results = compounds.map((item: any) => ({
       cid: item.cid,
       name: item.name,
-      iupacName: item.iupacName,
-      formula: item.formula,
-      molecularWeight: item.molecularWeight,
-      chemicalClass: item.chemicalClass,
-      description: item.description,
+      iupacName: item.iupacName || undefined,
+      formula: item.formula || undefined,
+      molecularWeight: item.molecularWeight || undefined,
+      chemicalClass: item.chemicalClass || undefined,
+      description: item.description || undefined,
       imageUrl: item.imageUrl || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${item.cid}&width=300&height=300`,
       similarity: item._additional?.certainty ? Math.round(item._additional.certainty * 100) : undefined,
     }));

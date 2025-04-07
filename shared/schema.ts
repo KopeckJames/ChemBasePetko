@@ -42,8 +42,8 @@ export const insertCompoundSchema = createInsertSchema(compounds).omit({
 export const searchQuerySchema = z.object({
   query: z.string().min(1, "Query is required"),
   searchType: z.enum(["semantic", "keyword"]).default("semantic"),
-  molecularWeight: z.enum(["", "lt_100", "100-200", "200-500", "gt_500"]).optional(),
-  chemicalClass: z.enum(["", "aromatic", "aliphatic", "heterocyclic", "organometallic"]).optional(),
+  molecularWeight: z.enum(["", "all", "lt_100", "100-200", "200-500", "gt_500"]).optional(),
+  chemicalClass: z.enum(["", "all", "aromatic", "aliphatic", "heterocyclic", "organometallic"]).optional(),
   sort: z.enum(["relevance", "molecular_weight", "name"]).default("relevance"),
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(10),

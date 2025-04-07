@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useSearch } from 'wouter';
+import { useLocation, useSearch as useWouterSearch } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { type SearchQuery, type SearchResponse } from '@shared/schema';
 
 export function useSearch() {
   const [, setLocation] = useLocation();
-  const search = useSearch();
+  const search = useWouterSearch();
   const params = new URLSearchParams(search);
 
   // Parse search parameters from URL
