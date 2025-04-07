@@ -40,15 +40,22 @@ async function fetchRandomCompounds(count: number = 100): Promise<void> {
     
     // Get a list of random CIDs (we'll request more than needed in case some are invalid)
     const maxCID = 150000; // A reasonable max CID that's likely to exist
-    const cidsToTry = Array.from({ length: count * 2 }, () => Math.floor(Math.random() * maxCID) + 1);
+    const cidsToTry = Array.from({ length: count * 3 }, () => Math.floor(Math.random() * maxCID) + 1);
     
     let downloadedCount = 0;
-    const batchSize = 10; // Process in smaller batches to avoid overwhelming the API
+    // Increased batch size to maximize throughput while staying under 399 requests per second
+    const batchSize = 40; 
+    // Calculate time to wait between batches to maintain rate limit (in milliseconds)
+    const requestsPerSecond = 399;
+    const waitTime = Math.ceil((batchSize * 1000) / requestsPerSecond);
+    
+    console.log(`Rate limit set to ${requestsPerSecond} requests per second`);
+    console.log(`Processing ${batchSize} compounds per batch with ${waitTime}ms between requests`);
     
     for (let i = 0; i < cidsToTry.length && downloadedCount < count; i += batchSize) {
       const batch = cidsToTry.slice(i, i + batchSize);
       
-      console.log(`Processing batch ${i/batchSize + 1} with CIDs: ${batch.join(', ')}`);
+      console.log(`Processing batch ${Math.floor(i/batchSize) + 1} with ${batch.length} CIDs`);
       
       // Process each CID in parallel within the batch
       const batchPromises = batch.map(async (cid) => {
@@ -72,9 +79,13 @@ async function fetchRandomCompounds(count: number = 100): Promise<void> {
       const successful = results.filter(Boolean);
       
       console.log(`Batch completed: ${successful.length}/${batch.length} compounds downloaded successfully`);
+      console.log(`Total progress: ${downloadedCount}/${count} compounds downloaded`);
       
-      // Small delay to avoid overwhelming the API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait just enough time to maintain our rate limit of 399 requests per second
+      if (downloadedCount < count) {
+        console.log(`Waiting ${waitTime}ms before next batch to maintain rate limit...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
     }
     
     console.log(`Finished downloading ${downloadedCount} compounds`);
