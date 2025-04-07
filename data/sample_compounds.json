@@ -1,0 +1,72 @@
+[
+  {
+    "cid": 1,
+    "name": "Water",
+    "iupacName": "Oxidane",
+    "formula": "H2O",
+    "molecularWeight": 18.01528,
+    "synonyms": ["H2O", "Dihydrogen monoxide", "Hydrogen oxide"],
+    "description": "Water is an inorganic, transparent, tasteless, odorless, and nearly colorless chemical substance, which is the main constituent of Earth's hydrosphere and the fluids of all known living organisms.",
+    "chemicalClass": ["Oxide", "Inorganic compound"],
+    "inchi": "InChI=1S/H2O/h1H2",
+    "inchiKey": "XLYOFNOQVPJJNP-UHFFFAOYSA-N",
+    "smiles": "O",
+    "imageUrl": "https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=962&width=300&height=300"
+  },
+  {
+    "cid": 2,
+    "name": "Ethanol",
+    "iupacName": "Ethanol",
+    "formula": "C2H6O",
+    "molecularWeight": 46.06844,
+    "synonyms": ["Alcohol", "Ethyl alcohol", "Drinking alcohol"],
+    "description": "Ethanol is a volatile, flammable, colorless liquid with a slight characteristic odor. It is a psychoactive substance, recreational drug, and the active ingredient in alcoholic drinks.",
+    "chemicalClass": ["Alcohol", "Organic compound"],
+    "inchi": "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3",
+    "inchiKey": "LFQSCWFLJHTTHZ-UHFFFAOYSA-N",
+    "smiles": "CCO",
+    "imageUrl": "https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=702&width=300&height=300"
+  },
+  {
+    "cid": 3,
+    "name": "Acetylsalicylic acid",
+    "iupacName": "2-acetoxybenzoic acid",
+    "formula": "C9H8O4",
+    "molecularWeight": 180.157,
+    "synonyms": ["Aspirin", "ASA", "Acetylsalicylate"],
+    "description": "Aspirin, also known as acetylsalicylic acid (ASA), is a medication used to reduce pain, fever, or inflammation. Specific inflammatory conditions which aspirin is used to treat include Kawasaki disease, pericarditis, and rheumatic fever.",
+    "chemicalClass": ["Salicylate", "NSAID", "Organic acid"],
+    "inchi": "InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h2-5H,1H3,(H,11,12)",
+    "inchiKey": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N",
+    "smiles": "CC(=O)OC1=CC=CC=C1C(=O)O",
+    "imageUrl": "https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=2244&width=300&height=300"
+  },
+  {
+    "cid": 4,
+    "name": "Caffeine",
+    "iupacName": "1,3,7-trimethylpurine-2,6-dione",
+    "formula": "C8H10N4O2",
+    "molecularWeight": 194.19,
+    "synonyms": ["Caffeine", "1,3,7-trimethylxanthine", "Theine"],
+    "description": "Caffeine is a central nervous system (CNS) stimulant of the methylxanthine class. It is the world's most widely consumed psychoactive drug. Unlike many other psychoactive substances, it is legal and unregulated in nearly all parts of the world.",
+    "chemicalClass": ["Alkaloid", "Stimulant", "Methylxanthine"],
+    "inchi": "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3",
+    "inchiKey": "RYYVLZVUVIJVGH-UHFFFAOYSA-N",
+    "smiles": "CN1C=NC2=C1C(=O)N(C)C(=O)N2C",
+    "imageUrl": "https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=2519&width=300&height=300"
+  },
+  {
+    "cid": 5,
+    "name": "Glucose",
+    "iupacName": "(2R,3S,4R,5R)-2,3,4,5,6-pentahydroxyhexanal",
+    "formula": "C6H12O6",
+    "molecularWeight": 180.156,
+    "synonyms": ["D-Glucose", "Dextrose", "Blood sugar"],
+    "description": "Glucose is a simple sugar with the molecular formula C6H12O6. Glucose is the most abundant monosaccharide, a subcategory of carbohydrates. Glucose is mainly made by plants and most algae during photosynthesis from water and carbon dioxide.",
+    "chemicalClass": ["Carbohydrate", "Monosaccharide", "Hexose"],
+    "inchi": "InChI=1S/C6H12O6/c7-1-2-3(8)4(9)5(10)6(11)12-2/h1-6,8-11H,7H2/t2-,3-,4+,5-,6-/m1/s1",
+    "inchiKey": "WQZGKKKJIJFFOK-GASJEMHNSA-N",
+    "smiles": "C(C1C(C(C(C(O1)O)O)O)O)O",
+    "imageUrl": "https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=5793&width=300&height=300"
+  }
+]

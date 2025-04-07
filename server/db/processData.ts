@@ -148,7 +148,8 @@ function processPCCompound(compound: any): InsertCompound {
  * Process compound in Record format (from PubChem REST API)
  */
 function processRecordFormat(record: any): InsertCompound {
-  const cid = record.id?.id?.cid || 0;
+  // Get CID from RecordNumber
+  const cid = record.RecordNumber || 0;
   if (!cid) {
     throw new Error('Missing compound ID (CID)');
   }
@@ -162,72 +163,104 @@ function processRecordFormat(record: any): InsertCompound {
   };
   
   // Extract information from Record format
-  if (record.recordTitle) {
-    result.name = record.recordTitle;
+  if (record.RecordTitle) {
+    result.name = record.RecordTitle;
   }
   
-  if (record.iupacName) {
-    result.iupacName = record.iupacName;
-  }
-  
-  if (record.molecularFormula) {
-    result.formula = record.molecularFormula;
-  }
-  
-  if (record.molecularWeight) {
-    result.molecularWeight = parseFloat(record.molecularWeight);
-  }
-  
-  if (record.inchi) {
-    result.inchi = record.inchi;
-  }
-  
-  if (record.inchiKey) {
-    result.inchiKey = record.inchiKey;
-  }
-  
-  if (record.canonicalSmiles) {
-    result.smiles = record.canonicalSmiles;
-  }
-  
-  if (record.synonyms && Array.isArray(record.synonyms)) {
-    result.synonyms = record.synonyms;
-  }
-  
-  if (record.description) {
-    result.description = record.description;
-  }
-  
-  // Extract chemical classes
-  if (record.chemicalClasses && Array.isArray(record.chemicalClasses)) {
-    result.chemicalClass = record.chemicalClasses;
-  } else {
-    // Add some default chemical classes if information is available
-    const chemicalClasses: string[] = [];
+  // Find sections containing relevant information
+  if (record.Section && Array.isArray(record.Section)) {
+    const infoSections: any[] = [];
     
-    if (result.formula) {
-      if (result.formula.includes('C') && result.formula.includes('H')) {
-        chemicalClasses.push('Organic compounds');
-        
-        if (result.formula.includes('O')) {
-          chemicalClasses.push('Oxygen-containing compounds');
-        }
-        
-        if (result.formula.includes('N')) {
-          chemicalClasses.push('Nitrogen-containing compounds');
-        }
-        
-        if (result.formula.includes('S')) {
-          chemicalClasses.push('Sulfur-containing compounds');
-        }
-      } else {
-        chemicalClasses.push('Inorganic compounds');
+    // First find all the information sections
+    for (const section of record.Section) {
+      if (section.Section && Array.isArray(section.Section)) {
+        infoSections.push(...section.Section);
       }
     }
     
-    if (chemicalClasses.length > 0) {
-      result.chemicalClass = chemicalClasses;
+    // Now process each section to extract relevant info
+    for (const section of infoSections) {
+      // Find description in "Record Description" section
+      if (section.TOCHeading === "Record Description" && section.Information && section.Information.length > 0) {
+        const descriptionInfo = section.Information[0];
+        if (descriptionInfo.Value && descriptionInfo.Value.StringWithMarkup && descriptionInfo.Value.StringWithMarkup.length > 0) {
+          result.description = descriptionInfo.Value.StringWithMarkup[0].String;
+        }
+      }
+      
+      // Find chemical property info in "Computed Descriptors" section
+      if (section.TOCHeading === "Computed Descriptors" && section.Section && Array.isArray(section.Section)) {
+        for (const subSection of section.Section) {
+          // Process each subsection based on TOCHeading
+          if (subSection.TOCHeading === "IUPAC Name" && subSection.Information && subSection.Information.length > 0) {
+            if (subSection.Information[0].Value && subSection.Information[0].Value.StringWithMarkup && subSection.Information[0].Value.StringWithMarkup.length > 0) {
+              result.iupacName = subSection.Information[0].Value.StringWithMarkup[0].String;
+            }
+          }
+          
+          if (subSection.TOCHeading === "InChI" && subSection.Information && subSection.Information.length > 0) {
+            if (subSection.Information[0].Value && subSection.Information[0].Value.StringWithMarkup && subSection.Information[0].Value.StringWithMarkup.length > 0) {
+              result.inchi = subSection.Information[0].Value.StringWithMarkup[0].String;
+            }
+          }
+          
+          if (subSection.TOCHeading === "InChIKey" && subSection.Information && subSection.Information.length > 0) {
+            if (subSection.Information[0].Value && subSection.Information[0].Value.StringWithMarkup && subSection.Information[0].Value.StringWithMarkup.length > 0) {
+              result.inchiKey = subSection.Information[0].Value.StringWithMarkup[0].String;
+            }
+          }
+          
+          if (subSection.TOCHeading === "SMILES" && subSection.Information && subSection.Information.length > 0) {
+            if (subSection.Information[0].Value && subSection.Information[0].Value.StringWithMarkup && subSection.Information[0].Value.StringWithMarkup.length > 0) {
+              result.smiles = subSection.Information[0].Value.StringWithMarkup[0].String;
+            }
+          }
+          
+          if (subSection.TOCHeading === "Molecular Formula" && subSection.Information && subSection.Information.length > 0) {
+            if (subSection.Information[0].Value && subSection.Information[0].Value.StringWithMarkup && subSection.Information[0].Value.StringWithMarkup.length > 0) {
+              result.formula = subSection.Information[0].Value.StringWithMarkup[0].String;
+            }
+          }
+          
+          if (subSection.TOCHeading === "Molecular Weight" && subSection.Information && subSection.Information.length > 0) {
+            if (subSection.Information[0].Value && subSection.Information[0].Value.StringWithMarkup && subSection.Information[0].Value.StringWithMarkup.length > 0) {
+              const weightStr = subSection.Information[0].Value.StringWithMarkup[0].String;
+              const weight = parseFloat(weightStr);
+              if (!isNaN(weight)) {
+                result.molecularWeight = weight;
+              }
+            }
+          }
+        }
+      }
     }
+  }
+  
+  // Extract chemical classes based on formula
+  const chemicalClasses: string[] = [];
+  
+  if (result.formula) {
+    if (result.formula.includes('C') && result.formula.includes('H')) {
+      chemicalClasses.push('Organic compounds');
+      
+      if (result.formula.includes('O')) {
+        chemicalClasses.push('Oxygen-containing compounds');
+      }
+      
+      if (result.formula.includes('N')) {
+        chemicalClasses.push('Nitrogen-containing compounds');
+      }
+      
+      if (result.formula.includes('S')) {
+        chemicalClasses.push('Sulfur-containing compounds');
+      }
+    } else {
+      chemicalClasses.push('Inorganic compounds');
+    }
+  }
+  
+  if (chemicalClasses.length > 0) {
+    result.chemicalClass = chemicalClasses;
   }
   
   // Set default image URL

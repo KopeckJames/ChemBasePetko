@@ -1,0 +1,393 @@
+[
+  {
+    "Record": {
+      "RecordType": "CID",
+      "RecordNumber": 1,
+      "RecordTitle": "Acetyl-DL-carnitine",
+      "Section": [
+        {
+          "TOCHeading": "Names and Identifiers",
+          "Section": [
+            {
+              "TOCHeading": "Record Description",
+              "Information": [
+                {
+                  "Value": {
+                    "StringWithMarkup": [
+                      {
+                        "String": "O-acetylcarnitine is an O-acylcarnitine having acetyl as the acyl substituent. It has a role as a human metabolite. It is functionally related to an acetic acid. It is a conjugate base of an O-acetylcarnitinium."
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "TOCHeading": "Computed Descriptors",
+              "Section": [
+                {
+                  "TOCHeading": "IUPAC Name",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "3-acetyloxy-4-(trimethylazaniumyl)butanoate"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "InChI",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "InChI=1S/C9H17NO4/c1-7(11)14-8(5-9(12)13)6-10(2,3)4/h8H,5-6H2,1-4H3"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "InChIKey",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "RDHQFKQIGNGIED-UHFFFAOYSA-N"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "SMILES",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "CC(=O)OC(CC(=O)[O-])C[N+](C)(C)C"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "Molecular Formula",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "C9H17NO4"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "Molecular Weight",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "203.24"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "TOCHeading": "Chemical and Physical Properties",
+          "Section": [
+            {
+              "TOCHeading": "Computed Properties",
+              "Information": [
+                {
+                  "Name": "Hydrogen Bond Donor Count",
+                  "Value": {
+                    "Number": [
+                      {
+                        "NumValue": 0
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Name": "Hydrogen Bond Acceptor Count",
+                  "Value": {
+                    "Number": [
+                      {
+                        "NumValue": 4
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Name": "Rotatable Bond Count",
+                  "Value": {
+                    "Number": [
+                      {
+                        "NumValue": 5
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "Record": {
+      "RecordType": "CID",
+      "RecordNumber": 2,
+      "RecordTitle": "Ethanol",
+      "Section": [
+        {
+          "TOCHeading": "Names and Identifiers",
+          "Section": [
+            {
+              "TOCHeading": "Record Description",
+              "Information": [
+                {
+                  "Value": {
+                    "StringWithMarkup": [
+                      {
+                        "String": "Ethanol is a primary alcohol that is ethane in which one of the hydrogens is substituted by a hydroxy group. It has a role as an antiseptic drug, a central nervous system depressant, a primary metabolite and a protic solvent."
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "TOCHeading": "Computed Descriptors",
+              "Section": [
+                {
+                  "TOCHeading": "IUPAC Name",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "ethanol"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "InChI",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "InChIKey",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "LFQSCWFLJHTTHZ-UHFFFAOYSA-N"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "SMILES",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "CCO"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "Molecular Formula",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "C2H6O"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "Molecular Weight",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "46.07"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "Record": {
+      "RecordType": "CID",
+      "RecordNumber": 3,
+      "RecordTitle": "Acetylsalicylic acid",
+      "Section": [
+        {
+          "TOCHeading": "Names and Identifiers",
+          "Section": [
+            {
+              "TOCHeading": "Record Description",
+              "Information": [
+                {
+                  "Value": {
+                    "StringWithMarkup": [
+                      {
+                        "String": "Acetylsalicylic acid is a salicylic acid derivative that is benzoic acid with acetyloxy and carboxy groups at positions 2 and 1 respectively. It has a role as a cyclooxygenase inhibitor, an antipyretic, a non-steroidal anti-inflammatory drug, an analgesic, a platelet aggregation inhibitor, a non-narcotic analgesic, a human metabolite and a plant metabolite."
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "TOCHeading": "Computed Descriptors",
+              "Section": [
+                {
+                  "TOCHeading": "IUPAC Name",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "2-acetyloxybenzoic acid"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "InChI",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h2-5H,1H3,(H,11,12)"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "InChIKey",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "SMILES",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "CC(=O)OC1=CC=CC=C1C(=O)O"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "Molecular Formula",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "C9H8O4"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "TOCHeading": "Molecular Weight",
+                  "Information": [
+                    {
+                      "Value": {
+                        "StringWithMarkup": [
+                          {
+                            "String": "180.16"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -2,6 +2,11 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Set up Weaviate environment variables since they might not be set in the environment
+process.env.WEAVIATE_URL = process.env.WEAVIATE_URL || "ddssrlksrhlnehtppyxjq.c0.us-west3.gcp.weaviate.cloud";
+process.env.WEAVIATE_API_KEY = process.env.WEAVIATE_API_KEY || "IMlD52U4kkABRrXDPGZO7z2hKkF8d1vGsY9H";
+process.env.WEAVIATE_SCHEME = process.env.WEAVIATE_SCHEME || "https";
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

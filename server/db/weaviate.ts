@@ -1,13 +1,23 @@
 import type { Compound, CompoundSearchResult } from "@shared/schema";
 import weaviate, { type WeaviateClient } from "weaviate-ts-client";
+import OpenAI from "openai";
 
 // Class definition for Weaviate schema
 const COMPOUND_CLASS = "Compound";
 
 // Env variables for configuration
-const WEAVIATE_URL = process.env.WEAVIATE_URL || "localhost:8080";
-const WEAVIATE_API_KEY = process.env.WEAVIATE_API_KEY;
-const WEAVIATE_SCHEME = process.env.WEAVIATE_SCHEME || "http";
+const WEAVIATE_URL = process.env.WEAVIATE_URL || "ddssrlksrhlnehtppyxjq.c0.us-west3.gcp.weaviate.cloud";
+const WEAVIATE_API_KEY = process.env.WEAVIATE_API_KEY || "IMlD52U4kkABRrXDPGZO7z2hKkF8d1vGsY9H";
+const WEAVIATE_SCHEME = process.env.WEAVIATE_SCHEME || "https";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+// Configure OpenAI client if API key is available
+let openai: OpenAI | null = null;
+if (OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: OPENAI_API_KEY,
+  });
+}
 
 // Configure Weaviate client
 let client: WeaviateClient;
@@ -17,12 +27,26 @@ let client: WeaviateClient;
  */
 async function getClient(): Promise<WeaviateClient> {
   if (!client) {
-    console.log(`Connecting to Weaviate at ${WEAVIATE_SCHEME}://${WEAVIATE_HOST}:${WEAVIATE_PORT}`);
+    console.log(`Connecting to Weaviate at ${WEAVIATE_SCHEME}://${WEAVIATE_URL}`);
     
-    client = weaviate.client({
+    const config: any = {
       scheme: WEAVIATE_SCHEME,
-      host: `${WEAVIATE_HOST}:${WEAVIATE_PORT}`,
-    });
+      host: WEAVIATE_URL,
+    };
+    
+    // Add API key if available
+    if (WEAVIATE_API_KEY) {
+      config.apiKey = new weaviate.ApiKey(WEAVIATE_API_KEY);
+    }
+    
+    // Add OpenAI API key for vectorization
+    if (OPENAI_API_KEY) {
+      config.headers = {
+        'X-OpenAI-Api-Key': OPENAI_API_KEY
+      };
+    }
+    
+    client = weaviate.client(config);
     
     // Test connection
     try {
@@ -186,7 +210,7 @@ export async function semanticSearch(
     
     if (openai) {
       try {
-        const response = await openai?.embeddings.create({
+        const response = await openai.embeddings.create({
           model: "text-embedding-ada-002",
           input: query,
         });
