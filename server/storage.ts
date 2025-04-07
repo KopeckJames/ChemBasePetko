@@ -265,8 +265,11 @@ export class MemStorage implements IStorage {
           console.log(`Created data directory: ${this.dataPath}`);
         }
         
-        // Try to load some data - limit to 20 compounds for faster startup
-        await this.loadPubChemData(20);
+        // In development, limit to 20 compounds for faster startup
+        // In production, we would load all available compounds
+        const loadLimit = process.env.NODE_ENV === 'production' ? 1000 : 20;
+        console.log(`Loading up to ${loadLimit} PubChem compounds...`);
+        await this.loadPubChemData(loadLimit);
       }
       
       this.dataInitialized = true;
@@ -279,8 +282,6 @@ export class MemStorage implements IStorage {
 
   async loadPubChemData(limit: number = 1000): Promise<number> {
     try {
-      console.log(`Loading up to ${limit} PubChem compounds...`);
-      
       // Check if data directory exists
       if (!fs.existsSync(this.dataPath)) {
         console.log(`Creating data directory: ${this.dataPath}`);
