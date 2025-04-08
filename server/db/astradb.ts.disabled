@@ -1,0 +1,19 @@
+// This file is temporarily disabled as we're using Weaviate instead
+import { Compound, CompoundSearchResult, SearchQuery, SearchResponse } from "../../shared/schema";
+
+// Dummy implementations that throw "Not implemented" errors
+export async function initializeSchema(): Promise<void> {
+  throw new Error("AstraDB integration is disabled - using Weaviate instead");
+}
+
+export async function addCompound(compound: Compound): Promise<void> {
+  throw new Error("AstraDB integration is disabled - using Weaviate instead");
+}
+
+export async function semanticSearch(searchQuery: SearchQuery): Promise<SearchResponse> {
+  throw new Error("AstraDB integration is disabled - using Weaviate instead");
+}
+
+export async function getCompoundByCid(cid: number): Promise<Compound | null> {
+  throw new Error("AstraDB integration is disabled - using Weaviate instead");
+}

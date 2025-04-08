@@ -14,6 +14,11 @@ const ASTRA_DB_TOKEN = process.env.ASTRA_DB_TOKEN || "AstraCS:YeyhvYemXipawpEtFv
 // Updated API endpoint for DataStax Astra - this is the standard endpoint format
 const ASTRA_API_ENDPOINT = "https://api.astra.datastax.com";
 
+// Required environment variables that should be set when using AstraDB
+const ASTRA_DB_ID = process.env.ASTRA_DB_ID || "chemcompound-vector-db";
+const ASTRA_DB_REGION = process.env.ASTRA_DB_REGION || "us-east1";
+const ASTRA_DB_KEYSPACE = process.env.ASTRA_DB_KEYSPACE || "compounds";
+
 let astraClient: any = null;
 let compoundsCollection: any = null;
 

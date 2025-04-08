@@ -1,5 +1,5 @@
 import { users, type User, type InsertUser, type Compound, type InsertCompound, type SearchQuery, type CompoundSearchResult, type SearchResponse } from "@shared/schema";
-import * as astraDbClient from "./db/astradb";
+import * as weaviateClient from "./db/weaviate";
 import * as supabaseClient from "./db/supabase";
 import { readJSON, processCompoundData } from "./db/processData";
 import path from "path";
@@ -133,9 +133,9 @@ export class MemStorage implements IStorage {
 
   async searchCompounds(searchQuery: SearchQuery): Promise<SearchResponse> {
     try {
-      // If semantic search is requested, use AstraDB vector database 
+      // If semantic search is requested, use Weaviate vector database 
       if (searchQuery.searchType === "semantic") {
-        return await astraDbClient.semanticSearch(searchQuery);
+        return await weaviateClient.semanticSearch(searchQuery);
       }
       
       // For keyword search, use Supabase directly - no fallback to in-memory storage
@@ -226,7 +226,7 @@ export class MemStorage implements IStorage {
   async initializeDatabase(): Promise<void> {
     // Track external database connection status
     let supabaseConnected = false;
-    let astradbConnected = false;
+    let weaviateConnected = false;
     
     console.log("Initializing database...");
     
@@ -241,32 +241,32 @@ export class MemStorage implements IStorage {
       // We'll proceed despite errors - the application will show appropriate errors to users
     }
     
-    // Initialize AstraDB database connection with more resilience
+    // Initialize Weaviate database connection with more resilience
     try {
-      await astraDbClient.initializeSchema();
-      astradbConnected = true;
-      console.log("AstraDB database initialized successfully");
+      await weaviateClient.initializeSchema();
+      weaviateConnected = true;
+      console.log("Weaviate database initialized successfully");
     } catch (error) {
-      console.error("Error initializing AstraDB:", error instanceof Error ? error.message : String(error));
-      console.warn("⚠️ Proceeding with application startup despite AstraDB initialization issues");
+      console.error("Error initializing Weaviate:", error instanceof Error ? error.message : String(error));
+      console.warn("⚠️ Proceeding with application startup despite Weaviate initialization issues");
       // We'll proceed despite errors - the application will show appropriate errors to users
     }
     
-    if (supabaseConnected && astradbConnected) {
+    if (supabaseConnected && weaviateConnected) {
       console.log("✅ NOTICE: All external databases are connected and working properly.");
     } else {
       console.warn("⚠️ WARNING: One or more database connections failed.");
       if (!supabaseConnected) {
         console.warn("  - Supabase connection failed: Data storage and retrieval will not work properly.");
       }
-      if (!astradbConnected) {
-        console.warn("  - AstraDB/DataStax connection failed: Semantic search will not work properly.");
+      if (!weaviateConnected) {
+        console.warn("  - Weaviate connection failed: Semantic search will not work properly.");
       }
       console.warn("Please check your database credentials and connection settings.");
     }
     
     // Load sample data from files if databases are connected
-    if (supabaseConnected && astradbConnected) {
+    if (supabaseConnected && weaviateConnected) {
       try {
         const loadCount = await this.loadPubChemData(20);
         console.log(`Loaded ${loadCount} PubChem compounds during initialization`);
@@ -352,8 +352,8 @@ export class MemStorage implements IStorage {
                 // Add to Supabase relational database - no fallback to in-memory
                 await supabaseClient.addCompound(compound);
                 
-                // Add to AstraDB vector database - no fallback to in-memory
-                await astraDbClient.addCompound(createdCompound);
+                // Add to Weaviate vector database - no fallback to in-memory
+                await weaviateClient.addCompound(createdCompound);
                 
                 // Mark as processed
                 createdCompound.isProcessed = true;
