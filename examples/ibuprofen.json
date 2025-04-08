@@ -1,0 +1,17 @@
+{
+  "cid": 3672,
+  "name": "Ibuprofen",
+  "iupacName": "2-[4-(2-methylpropyl)phenyl]propanoic acid",
+  "formula": "C13H18O2",
+  "inchiKey": "HEFNNWSXXWATRW-UHFFFAOYSA-N",
+  "canonicalSmiles": "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O",
+  "molecularWeight": 206.285,
+  "xlogp": 3.5,
+  "rotatable_bond_count": 4,
+  "h_bond_donor_count": 1,
+  "h_bond_acceptor_count": 2,
+  "chemical_class": "Propionic Acids",
+  "complexity": 182,
+  "description": "Ibuprofen is a nonsteroidal anti-inflammatory drug (NSAID) that is used for treating pain, fever, and inflammation. This includes painful menstrual periods, migraines, and rheumatoid arthritis. It may also be used to close a patent ductus arteriosus in a premature baby. It can be used by mouth or intravenously. It typically begins working within an hour.",
+  "pharmacology": "Ibuprofen is a non-steroidal anti-inflammatory drug (NSAID). It works by blocking the production of certain natural substances that cause inflammation. This effect helps to decrease swelling, pain, or fever. Ibuprofen is commonly used for treating pain, reducing fever, and relieving the symptoms of arthritis."
+}

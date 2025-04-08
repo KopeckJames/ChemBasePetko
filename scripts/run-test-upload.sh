@@ -1,28 +1,66 @@
 #!/bin/bash
 
-# Simple script to test the upload functionality with example compounds
-# This is useful for quickly verifying that the upload system works
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-echo "Testing upload functionality with example compounds..."
+echo -e "${BLUE}=========================================================${NC}"
+echo -e "${BLUE}    Chemical Vector Database - Test Upload Script        ${NC}"
+echo -e "${BLUE}=========================================================${NC}"
+echo ""
 
-# Find the examples directory
-EXAMPLES_DIR="examples"
-
-if [ ! -d "$EXAMPLES_DIR" ]; then
-  echo "❌ Error: Examples directory not found. Please make sure you're running this from the project root."
-  exit 1
+# Check if examples directory exists
+if [ ! -d "examples" ]; then
+    echo -e "${RED}Error: examples directory not found.${NC}"
+    echo -e "Please run this script from the project root directory."
+    exit 1
 fi
 
-echo "Using examples directory: $(pwd)/$EXAMPLES_DIR"
+# Count example files
+example_count=$(ls examples/*.json 2>/dev/null | wc -l)
 
-# Process each example file
-for FILE in "$EXAMPLES_DIR"/*.json; do
-  FILENAME=$(basename "$FILE")
-  
-  echo "Uploading file: $FILENAME"
-  npx tsx scripts/upload-local-compounds.ts --file "$FILE"
-  
-  echo "------------------------------------"
-done
+if [ "$example_count" -eq 0 ]; then
+    echo -e "${RED}Error: No JSON files found in the examples directory.${NC}"
+    exit 1
+fi
 
-echo "Test upload complete!"
+echo -e "${BLUE}Found ${example_count} example compounds to upload.${NC}"
+echo ""
+
+# Test database connections first
+echo -e "${BLUE}Testing database connections...${NC}"
+npx tsx scripts/test-database-connections.ts
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Database connection test failed. Cannot proceed with upload.${NC}"
+    echo -e "${YELLOW}Please check your database connections and try again.${NC}"
+    exit 1
+fi
+
+echo ""
+echo -e "${BLUE}Uploading example compounds...${NC}"
+npx tsx scripts/upload-local-compounds.ts ./examples
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo -e "${GREEN}Example compounds successfully uploaded!${NC}"
+    
+    # Ask if user wants to test semantic search
+    echo -e "${YELLOW}Would you like to test the semantic search functionality?${NC} (y/n)"
+    read test_search
+    
+    if [ "$test_search" == "y" ] || [ "$test_search" == "Y" ]; then
+        echo ""
+        echo -e "${BLUE}Testing semantic search...${NC}"
+        npx tsx scripts/test-semantic-search.ts
+    fi
+    
+    echo ""
+    echo -e "${GREEN}Setup complete! You can now start the application.${NC}"
+else
+    echo ""
+    echo -e "${RED}Upload failed. Check the error messages above.${NC}"
+fi

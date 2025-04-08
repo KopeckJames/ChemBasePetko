@@ -1,124 +1,116 @@
 # Database Setup Guide
 
-## Overview
-
-This project uses two databases to store and query chemical compound data:
-
-1. **Supabase PostgreSQL** - Relational database for storing structured compound data
-2. **Weaviate Vector Database** - Vector database for semantic search capabilities
-
-This guide will help you set up both databases correctly.
+This document provides detailed instructions for setting up the database connections required for the Chemical Vector Database project.
 
 ## Prerequisites
 
-1. A Supabase account and project
-2. A Weaviate instance (cloud or self-hosted)
-3. Environment variables set up in `.env`
+- Node.js and npm installed
+- A Supabase account and project
+- A Weaviate instance (cloud or self-hosted)
 
 ## Environment Variables
 
-Create an `.env` file in the root directory with the following variables:
+The application requires the following environment variables to be set:
+
+### Supabase Configuration
 
 ```
-# Supabase credentials
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_KEY=your-supabase-key
+```
 
-# Weaviate credentials
-WEAVIATE_URL=your_weaviate_url
+- `SUPABASE_URL`: The URL of your Supabase project
+- `SUPABASE_KEY`: Your Supabase service role key (or anon key with appropriate permissions)
+
+### Weaviate Configuration
+
+```
+WEAVIATE_URL=your-weaviate-cluster-url.weaviate.network
 WEAVIATE_SCHEME=https
-WEAVIATE_API_KEY=your_weaviate_api_key
-
-# Optional: For text2vec-openai vectorizer
-OPENAI_API_KEY=your_openai_api_key
+WEAVIATE_API_KEY=your-weaviate-api-key
 ```
 
-## Supabase Setup
+- `WEAVIATE_URL`: The URL of your Weaviate instance (without the scheme)
+- `WEAVIATE_SCHEME`: The scheme to use (http or https)
+- `WEAVIATE_API_KEY`: Your Weaviate API key (if authentication is enabled)
 
-### Option 1: Run the SQL Script
+## Setup Options
 
-The easiest way to set up your Supabase database is to run the SQL script in the SQL editor of your Supabase dashboard:
+### Option 1: Using the Setup Script
 
-```sql
--- Create the compounds table if it doesn't exist
-CREATE TABLE IF NOT EXISTS compounds (
-  id SERIAL PRIMARY KEY,
-  cid INTEGER NOT NULL UNIQUE,
-  name TEXT NOT NULL,
-  iupac_name TEXT,
-  formula TEXT,
-  molecular_weight REAL,
-  synonyms TEXT[],
-  description TEXT,
-  chemical_class TEXT[],
-  inchi TEXT,
-  inchi_key TEXT,
-  smiles TEXT,
-  properties JSONB DEFAULT '{}'::jsonb,
-  is_processed BOOLEAN DEFAULT FALSE,
-  image_url TEXT
-);
+We provide a convenient setup script that guides you through the database setup process:
 
--- Create indexes for efficient searching
-CREATE INDEX IF NOT EXISTS idx_compounds_cid ON compounds(cid);
-CREATE INDEX IF NOT EXISTS idx_compounds_name ON compounds(name);
-CREATE INDEX IF NOT EXISTS idx_compounds_formula ON compounds(formula);
-CREATE INDEX IF NOT EXISTS idx_compounds_smiles ON compounds(smiles);
+1. Run the setup script:
 
--- Create the users table (kept for compatibility)
-CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL
-);
+```bash
+./scripts/setup-database.sh
 ```
 
-### Option 2: Run the Database Initialization Script
+2. Follow the prompts to set up your environment variables and test your database connections.
 
-Alternatively, you can run the database initialization script:
+### Option 2: Manual Setup
+
+1. Create a `.env` file in the project root directory with the environment variables listed above.
+
+2. Test your database connections:
 
 ```bash
 npx tsx scripts/test-database-connections.ts
 ```
 
-This will test the connections to both databases and verify that they're properly set up.
+3. Initialize the database schema and upload example data (optional):
 
-## Weaviate Setup
+```bash
+# Upload example compound data
+npx tsx scripts/upload-local-compounds.ts ./examples
+```
 
-Weaviate will be initialized automatically when you run the upload scripts or the application. The schema includes:
+4. Test the semantic search functionality:
 
-- Class: `Compound`
-- Properties: All compound data fields
-- Vectorizer: `text2vec-openai` (requires OpenAI API key)
-
-## Understanding Column Names
-
-There's an important aspect to understand about our column names:
-
-- In the PostgreSQL database, columns use `snake_case` naming (e.g., `iupac_name`, `chemical_class`)
-- In our TypeScript code, we use `camelCase` properties (e.g., `iupacName`, `chemicalClass`)
-
-This conversion happens automatically through our Drizzle ORM setup. The schema in `shared/schema.ts` defines this mapping.
+```bash
+npx tsx scripts/test-semantic-search.ts
+```
 
 ## Troubleshooting
 
-### Common Errors
+### Common Issues
 
-1. **Column not found errors:**
-   If you see errors like "Could not find the 'chemicalClass' column", it means your database schema doesn't match what our code expects. Make sure to run the SQL script above to create all required columns.
+1. **Connection Error with Supabase**
+   - Verify that your Supabase URL and key are correct
+   - Ensure that your Supabase project is active and not in maintenance mode
+   - Check that your network allows connections to Supabase
 
-2. **Connection errors:**
-   Double-check your environment variables to ensure they have the correct credentials.
+2. **Connection Error with Weaviate**
+   - Verify that your Weaviate URL, scheme, and API key are correct
+   - Ensure that your Weaviate instance is running and accessible
+   - Check that the Weaviate client configuration matches your instance configuration
 
-3. **Authentication errors:**
-   Make sure your Supabase and Weaviate API keys have the correct permissions.
+3. **Authentication Issues**
+   - For Supabase, make sure you're using the service role key or an anon key with appropriate permissions
+   - For Weaviate, check that your API key has the necessary permissions
 
-### Testing Connections
+4. **Schema Creation Failures**
+   - If schema creation fails, check the console logs for specific errors
+   - Try manually creating the schema using the Weaviate console or API
 
-You can verify your database connections at any time:
+## Database Architecture
 
-```bash
-npx tsx scripts/test-database-connections.ts
-```
+### Supabase
 
-For more detailed troubleshooting, check the console logs during application startup.
+The application uses Supabase as a relational database to store structured information about chemical compounds. The schema includes:
+
+- `compounds` table: Stores metadata about chemical compounds (IDs, names, formulas, etc.)
+- `users` table: Stores user information (if applicable)
+
+### Weaviate
+
+Weaviate is used as a vector database for semantic search capabilities. The schema includes:
+
+- `Compound` class: Stores chemical compound data with vector embeddings for semantic search
+
+## Advanced Configuration
+
+For advanced configuration options, please refer to the database client documentation:
+
+- [Supabase JavaScript Client](https://supabase.com/docs/reference/javascript/introduction)
+- [Weaviate TypeScript Client](https://weaviate.io/developers/weaviate/client-libraries/typescript)

@@ -1,141 +1,128 @@
-# Compound Upload Guide
+# Chemical Compound Upload Guide
 
-This guide explains how to upload chemical compound data to the database system.
+This guide explains how to upload your own chemical compound data to the Chemical Vector Database.
 
-## Overview
+## Supported File Formats
 
-The system supports uploading compound data from local JSON files. This is useful when you:
+The uploader currently supports compound data in JSON format with the following structures:
 
-1. Have pre-processed chemical data
-2. Want to batch import multiple compounds
-3. Need to use your own custom compound data
+1. PubChem JSON format (PC_Compounds or Record format)
+2. Custom JSON format matching our compound schema
 
-## Prerequisites
+## File Preparation
 
-1. Database connections properly set up (see DATABASE_SETUP.md)
-2. Environment variables configured in `.env`
-3. Compound data in JSON format
+### Option 1: PubChem Data
 
-## JSON Format Options
+If you have data from PubChem, it should already be in a compatible format. You can download compound data from PubChem in JSON format:
 
-The system supports two JSON formats:
+1. Visit [PubChem](https://pubchem.ncbi.nlm.nih.gov/)
+2. Search for compounds of interest
+3. Download the compound data in JSON format
 
-### 1. PubChem PC_Compounds Format
+### Option 2: Custom JSON Format
 
-This is a rich format that includes complete structure and property data from PubChem. Here's a simplified example (see `examples/aspirin.json` for a complete example):
-
-```json
-{
-  "PC_Compounds": [
-    {
-      "id": { "id": { "cid": 2244 } },
-      "props": [
-        {
-          "urn": { "label": "IUPAC Name" },
-          "value": { "sval": "2-acetoxybenzoic acid" }
-        },
-        {
-          "urn": { "label": "InChI" },
-          "value": { "sval": "InChI=1S/C9H8O4/c1-6(10)13..." }
-        }
-      ]
-    }
-  ],
-  "PC_Compounds_extras": {
-    "CID": 2244,
-    "name": "Aspirin",
-    "molecular_formula": "C9H8O4",
-    "iupac_name": "2-acetoxybenzoic acid",
-    "molecular_weight": 180.159,
-    "description": "Aspirin, also known as acetylsalicylic acid...",
-    "synonyms": ["Aspirin", "Acetylsalicylic acid", "ASA"],
-    "chemical_class": ["Aromatic compound", "Carboxylic acid"]
-  }
-}
-```
-
-### 2. Simple Direct Format
-
-This is a simplified format that contains just the essential compound properties:
+If you're preparing your own data, create JSON files that match the following structure:
 
 ```json
 {
-  "cid": 2244,
-  "name": "Aspirin",
-  "iupacName": "2-acetoxybenzoic acid",
-  "formula": "C9H8O4",
-  "molecularWeight": 180.159,
-  "synonyms": ["Aspirin", "Acetylsalicylic acid", "ASA"],
-  "description": "Aspirin, also known as acetylsalicylic acid...",
-  "chemicalClass": ["Aromatic compound", "Carboxylic acid"],
-  "inchi": "InChI=1S/C9H8O4/c1-6(10)13...",
-  "inchiKey": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N",
-  "smiles": "CC(=O)OC1=CC=CC=C1C(=O)O",
-  "properties": {
-    "xlogp": 1.2,
-    "complexity": 225
-  }
+  "cid": 123456,  // Unique compound identifier
+  "name": "Compound Name",
+  "iupacName": "IUPAC Systematic Name",
+  "formula": "C6H12O6",  // Molecular formula
+  "inchiKey": "ABCDEFGHIJKLMNOP-ABCDEFGHIJ-N",  // InChI Key
+  "canonicalSmiles": "C1C(C(C(C(C1O)O)O)O)O",  // SMILES representation
+  "molecularWeight": 180.156,  // Molecular weight in g/mol
+  "xlogp": -2.8,  // XLogP value
+  "rotatable_bond_count": 5,  // Number of rotatable bonds
+  "h_bond_donor_count": 5,  // Number of hydrogen bond donors
+  "h_bond_acceptor_count": 6,  // Number of hydrogen bond acceptors
+  "chemical_class": "Carbohydrates",  // Chemical class/category
+  "complexity": 232,  // Complexity score
+  "description": "Description of the compound and its properties",
+  "pharmacology": "Information about pharmacological properties",
+  "image_url": "https://example.com/compound.png"  // Optional image URL
 }
 ```
 
-> **Note:** Property names can be either camelCase (e.g., `iupacName`) or snake_case (e.g., `iupac_name`). The system handles both formats.
+> **Note**: Not all fields are required. The system will handle missing data appropriately.
 
-## Required Fields
+## Uploading Compounds
 
-The minimum required fields for a valid compound are:
+### Using the Command Line Script
 
-- `cid` (Compound ID, integer)
-- `name` (Compound name, string)
+1. Place your JSON files in a directory (e.g., `./my-compounds`)
 
-All other fields are optional but recommended for better search results.
-
-## Using the Upload Script
-
-To upload compounds, use the `upload-local-compounds.ts` script:
-
-### Upload a Single File
+2. Run the upload script:
 
 ```bash
-npx tsx scripts/upload-local-compounds.ts --file /path/to/compound.json
+npx tsx scripts/upload-local-compounds.ts ./my-compounds
 ```
 
-### Upload All Files in a Directory
+3. The script will:
+   - Process each JSON file in the directory
+   - Validate and transform the data
+   - Upload compounds to both Supabase and Weaviate
+   - Report on success/failure for each compound
 
-```bash
-npx tsx scripts/upload-local-compounds.ts --directory /path/to/directory
-```
+### Batch Processing
 
-### Test Upload with Example Compounds
+For large datasets, the system handles batch processing automatically:
 
-```bash
-./scripts/run-test-upload.sh
-```
+- Files are processed in parallel for efficiency
+- Progress tracking helps monitor large uploads
+- Error handling allows skipping problematic files without failing the entire batch
 
-## Batch Processing
+## Data Transformation
 
-The upload script processes files in batches to avoid overwhelming the database. For large datasets, consider splitting your files into manageable directories.
+During upload, the system performs several transformations:
+
+1. Data validation against the compound schema
+2. Property name normalization (camelCase to snake_case for database storage)
+3. Missing field handling with appropriate defaults
+4. Vector embedding generation for semantic search
+5. Duplicate detection to prevent reimporting the same compound
 
 ## Troubleshooting
 
-### Common Errors
+### Common Upload Issues
 
-1. **Invalid JSON format**:
-   Ensure your JSON files are valid and follow one of the supported formats.
+1. **Invalid JSON Format**
+   - Ensure your JSON files are valid (use a JSON validator if necessary)
+   - Each file should contain a single compound object or an array of compound objects
 
-2. **Missing required fields**:
-   Make sure each compound has at least a `cid` and `name`.
+2. **Missing Required Fields**
+   - At minimum, each compound should have a unique identifier (CID)
+   - Other fields will be filled with defaults if possible
 
-3. **Database connection issues**:
-   Verify your database connections are working using `scripts/test-database-connections.ts`.
+3. **Database Connection Issues**
+   - Verify that your database connections are working
+   - Run `./scripts/test-database-connections.ts` to verify connectivity
 
-4. **Column not found errors**:
-   Make sure your database schema matches the expected structure in `DATABASE_SETUP.md`.
+## Advanced Usage
 
-## Example Files
+### Programmatic Upload
 
-The `examples/` directory contains sample compound files:
+You can also upload compounds programmatically by importing the database functions:
 
-- `aspirin.json`: Example of a compound in PubChem PC_Compounds format
-- `caffeine.json`: Another example compound
+```typescript
+import { processCompoundData } from '../server/db/processData';
+import { createCompound } from '../server/db/supabase';
+import { addCompound } from '../server/db/weaviate';
 
-Study these examples to understand the expected format for your own data.
+async function uploadCompound(compoundData: any) {
+  // Process and validate the compound data
+  const processedCompound = await processCompoundData(compoundData);
+  
+  // Upload to Supabase
+  const compound = await createCompound(processedCompound);
+  
+  // Upload to Weaviate
+  await addCompound(compound);
+  
+  return compound;
+}
+```
+
+### Custom Data Processing
+
+If you need to process data in a custom format, you can extend the `processCompoundData` function in `server/db/processData.ts` to handle your specific format.

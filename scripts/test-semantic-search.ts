@@ -33,24 +33,55 @@ Description: ${compound.description ? compound.description.substring(0, 100) + '
 async function testSemanticSearch() {
   console.log('Testing Weaviate semantic search functionality...');
   
+  // First, check environment variables
+  const envVars = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_KEY: process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY,
+    WEAVIATE_URL: process.env.WEAVIATE_URL,
+    WEAVIATE_API_KEY: process.env.WEAVIATE_API_KEY,
+    WEAVIATE_SCHEME: process.env.WEAVIATE_SCHEME || 'https'
+  };
+  
+  // Verify required environment variables
+  const missingVars = Object.entries(envVars)
+    .filter(([key, value]) => !value)
+    .map(([key]) => key);
+  
+  if (missingVars.length > 0) {
+    console.error(`❌ Missing required environment variables: ${missingVars.join(', ')}`);
+    console.error('Please set these variables in your .env file or environment');
+    return;
+  }
+  
+  console.log('✅ All required environment variables are set');
+  
   // Check if database has compounds
   try {
     // Try to get a specific compound (aspirin, CID 2244)
+    console.log('Attempting to retrieve aspirin (CID 2244) from the database...');
     const aspirin = await getCompoundByCid(2244);
     
     if (aspirin) {
-      console.log('\nFound aspirin (CID 2244) in the database:');
+      console.log('\n✅ Found aspirin (CID 2244) in the database:');
       printCompound(aspirin);
     } else {
-      console.log('\nAspirin not found in database. Testing with a random compound...');
+      console.log('\n⚠️ Aspirin not found in database. Testing with compounds with other CIDs...');
       
-      // Try to get any compound
-      const compound = await getCompoundByCid(1);
+      // Try to get any compound, checking a few common CIDs
+      let foundCompound = false;
+      for (const cid of [1, 5, 10, 100, 200]) {
+        console.log(`Attempting to retrieve compound with CID ${cid}...`);
+        const compound = await getCompoundByCid(cid);
+        
+        if (compound) {
+          console.log(`Found compound with CID ${cid} in the database:`);
+          printCompound(compound);
+          foundCompound = true;
+          break;
+        }
+      }
       
-      if (compound) {
-        console.log('Found a compound in the database:');
-        printCompound(compound);
-      } else {
+      if (!foundCompound) {
         console.warn('\n⚠️ No compounds found in the database. Please load some data first.');
         return;
       }

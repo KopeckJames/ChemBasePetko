@@ -45,13 +45,31 @@ async function testSupabaseConnection() {
       throw new Error('Supabase URL or API key is missing from environment variables');
     }
     
-    // Test the connection with a simpler query
-    const { data, error } = await supabase
+    // Helper function to sanitize Supabase URL for connection
+    function sanitizeSupabaseUrl(url: string): string {
+      // Remove '/rest/v1' if present for connection test
+      if (url.endsWith('/rest/v1')) {
+        return url.slice(0, -8);
+      }
+      // Remove trailing slash if present
+      return url.endsWith('/') ? url.slice(0, -1) : url;
+    }
+    
+    // Create a clean client for testing
+    const sanitizedUrl = sanitizeSupabaseUrl(SUPABASE_URL);
+    console.log(`Connecting to Supabase at ${sanitizedUrl}`);
+    
+    const testClient = createClient(sanitizedUrl, SUPABASE_KEY);
+    
+    // Test the connection with a simple query
+    const { data, error } = await testClient
       .from('compounds')
-      .select('*')
+      .select('count')
       .limit(1);
     
-    if (error) {
+    // PGRST104: Relation "public.compounds" does not exist (table doesn't exist)
+    // This is acceptable during setup, as we'll create it later
+    if (error && error.code !== 'PGRST104') {
       throw new Error(`Supabase query error: ${error.message}`);
     }
     
@@ -59,16 +77,21 @@ async function testSupabaseConnection() {
     
     // Check if the compounds table exists
     try {
-      const { error: tableError } = await supabase
-        .from('compounds')
-        .select('id')
-        .limit(1);
-      
-      if (tableError) {
-        console.log(chalk.yellow('⚠️ The compounds table doesn\'t exist or is not accessible.'));
-        console.log(chalk.yellow('   You may need to run the SQL setup script in DATABASE_SETUP.md.'));
+      if (error && error.code === 'PGRST104') {
+        console.log(chalk.yellow('⚠️ The compounds table doesn\'t exist in your Supabase project.'));
+        console.log(chalk.yellow('   It will be created automatically when you upload compounds'));
+        console.log(chalk.yellow('   or you can create it manually using the SQL script in DATABASE_SETUP.md.'));
       } else {
         console.log(chalk.green('✅ The compounds table exists and is accessible.'));
+        
+        // Try to get a count of compounds by querying all records
+        const { data: compounds, error: countError } = await testClient
+          .from('compounds')
+          .select('id');
+        
+        if (!countError && compounds) {
+          console.log(chalk.green(`   Found ${compounds.length} compounds in the database.`));
+        }
       }
     } catch (tableError) {
       console.log(chalk.yellow('⚠️ Couldn\'t check compounds table existence.'));
@@ -78,6 +101,7 @@ async function testSupabaseConnection() {
   } catch (error) {
     console.error(chalk.red(`❌ Supabase connection failed: ${error instanceof Error ? error.message : String(error)}`));
     console.error(chalk.yellow('Check your SUPABASE_URL and SUPABASE_KEY environment variables.'));
+    console.error(chalk.yellow('Make sure your Supabase project is running and accessible.'));
     return false;
   }
 }

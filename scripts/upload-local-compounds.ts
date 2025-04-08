@@ -20,12 +20,20 @@ async function getWeaviateClient(): Promise<WeaviateClient> {
   if (weaviateClient) return weaviateClient;
 
   const scheme = process.env.WEAVIATE_SCHEME || 'https';
-  const host = process.env.WEAVIATE_URL || '';
+  let host = process.env.WEAVIATE_URL || '';
   const apiKey = process.env.WEAVIATE_API_KEY;
 
   if (!host) {
     throw new Error('WEAVIATE_URL environment variable is required');
   }
+
+  // Remove scheme prefix if present in the URL
+  if (host.startsWith('http://') || host.startsWith('https://')) {
+    host = host.replace(/^https?:\/\//, '');
+    console.log(`Extracted host from URL: ${host}`);
+  }
+
+  console.log(`Connecting to Weaviate at ${scheme}://${host}`);
 
   const clientConfig: any = {
     scheme,

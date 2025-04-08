@@ -10,11 +10,31 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('SUPABASE_URL and SUPABASE_KEY or SUPABASE_ANON_KEY environment variables must be set for Supabase integration');
 }
 
-// Create Supabase client
-const supabase = createClient(
-  supabaseUrl || '',
-  supabaseKey || ''
-);
+// Helper function to sanitize Supabase URL
+function sanitizeSupabaseUrl(url: string): string {
+  // Make sure URL ends with '/rest/v1'
+  if (!url.endsWith('/rest/v1')) {
+    // Remove trailing slash if present
+    const baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+    return `${baseUrl}/rest/v1`;
+  }
+  return url;
+}
+
+// Create Supabase client with sanitized URL
+let supabase: SupabaseClient;
+try {
+  const sanitizedUrl = supabaseUrl ? sanitizeSupabaseUrl(supabaseUrl) : '';
+  supabase = createClient(
+    sanitizedUrl,
+    supabaseKey || ''
+  );
+  console.log(`Supabase client created with URL: ${sanitizedUrl}`);
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  // Create a minimal client that will properly report errors when used
+  supabase = createClient('', '');
+}
 
 /**
  * Gets a user by ID
