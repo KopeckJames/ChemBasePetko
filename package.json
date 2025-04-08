@@ -11,12 +11,9 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@astrajs/collections": "^0.3.4",
-    "@astrajs/rest": "^0.3.4",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
-    "@pinecone-database/pinecone": "^5.1.1",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -45,7 +42,6 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.3",
     "@replit/vite-plugin-shadcn-theme-json": "^0.0.4",
-    "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.60.5",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.0",

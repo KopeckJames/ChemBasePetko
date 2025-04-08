@@ -6,8 +6,6 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import path from "path";
 import fs from "fs";
-import { fetchRandomCompounds } from "./db/downloadPubChem";
-import { startBatchDownload, getDownloadProgress } from "./routes/download";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -111,48 +109,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to load data" });
     }
   });
-  
-  // Download new compounds from PubChem (original method - for smaller downloads)
-  app.post("/api/download-compounds", async (req, res) => {
-    try {
-      // Set a default of 1000 compounds but allow customization
-      const count = req.body.count || 1000;
-      
-      // This will be a long-running operation, so we'll start it in the background
-      // and immediately return to the client
-      res.json({ 
-        message: `Started downloading ${count} compounds from PubChem. This is a background process that may take several minutes. Check the server logs for progress.` 
-      });
-      
-      // Start the download process in the background
-      (async () => {
-        try {
-          console.log(`Downloading ${count} compounds from PubChem...`);
-          console.log(`Using rate limit of 399 requests per second as requested`);
-          
-          // Download the compounds
-          await fetchRandomCompounds(count);
-          
-          // Once download is complete, reload the data
-          console.log(`Download complete. Reloading database...`);
-          await storage.initializeDatabase();
-          
-          console.log(`Successfully downloaded and loaded ${count} compounds`);
-        } catch (downloadError) {
-          console.error("Background download process failed:", downloadError);
-        }
-      })();
-    } catch (error) {
-      console.error("Error starting download:", error);
-      res.status(500).json({ error: "Failed to start download process" });
-    }
-  });
-  
-  // Batch download 144,000 compounds (using detached child process)
-  app.post("/api/batch-download", startBatchDownload);
-  
-  // Get status of the batch download process
-  app.get("/api/batch-download/status", getDownloadProgress);
 
   return httpServer;
 }

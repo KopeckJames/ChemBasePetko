@@ -1,0 +1,12 @@
+{
+  "status": "in_progress",
+  "downloadedCount": 1132,
+  "totalCount": 144000,
+  "percentComplete": 0.79,
+  "lastUpdated": "2023-04-08T00:00:00.000Z",
+  "currentBatch": {
+    "startIndex": 1132,
+    "batchSize": 500,
+    "completed": 0
+  }
+}
