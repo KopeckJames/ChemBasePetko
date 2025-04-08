@@ -21,6 +21,7 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # Editor directories and files
 .idea
@@ -34,3 +35,10 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# PubChem Data Files
+/data/pubchem_compound_*.json
+
+# Runtime generated files
+.replit.backup
+generated-icon.png
