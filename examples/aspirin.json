@@ -1,0 +1,19 @@
+{
+  "cid": 2244,
+  "name": "Aspirin",
+  "iupac_name": "2-acetoxybenzoic acid",
+  "formula": "C9H8O4",
+  "molecular_weight": 180.16,
+  "synonyms": ["Acetylsalicylic acid", "ASA", "Asperin", "Ecotrin", "Bayer Aspirin"],
+  "description": "Aspirin, also known as acetylsalicylic acid (ASA), is a medication used to reduce pain, fever, or inflammation. Specific inflammatory conditions which aspirin is used to treat include Kawasaki disease, pericarditis, and rheumatic fever.",
+  "chemical_class": ["Benzoic acids", "Carboxylic acids", "Acetate esters", "Aromatic compounds"],
+  "inchi": "InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h2-5H,1H3,(H,11,12)",
+  "inchi_key": "BSYNRYMUTXBXSQ-UHFFFAOYSA-N",
+  "smiles": "CC(=O)OC1=CC=CC=C1C(=O)O",
+  "properties": {
+    "logP": 1.19,
+    "pKa": 3.5,
+    "solubility": "Slightly soluble in water, freely soluble in ethanol",
+    "melting_point": "135-136°C"
+  }
+}

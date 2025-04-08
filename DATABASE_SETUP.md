@@ -1,220 +1,86 @@
 # Database Setup Guide for ChemSearch
 
-This document provides instructions for setting up the two databases required for ChemSearch:
+This document provides instructions for setting up the databases required for ChemSearch.
 
-1. **Supabase** - Used for relational data storage
-2. **Weaviate** - Used for vector search capabilities
+## Database Requirements
+
+ChemSearch uses two databases:
+1. **Supabase** - For relational data storage
+2. **Weaviate** - For vector search capabilities
+
+## Environment Configuration
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+WEAVIATE_URL=your_weaviate_url
+WEAVIATE_API_KEY=your_weaviate_api_key
+WEAVIATE_SCHEME=https
+OPENAI_API_KEY=your_openai_api_key (optional, for better vector search)
+```
 
 ## Supabase Setup
 
-### Step 1: Create a Supabase Account and Project
+1. Create an account on [Supabase](https://supabase.com) if you don't have one
+2. Create a new project and note the URL and API key
+3. Set up the database tables using the SQL script:
+   
+   Either:
+   - Copy and run the SQL from `scripts/supabase-setup.sql` in the Supabase SQL Editor
+   - Or run the script directly using the Supabase CLI if you have it installed
 
-1. Go to [Supabase](https://supabase.com) and sign up for an account
-2. Create a new project
-3. Note the URL and API key from the project settings
-
-### Step 2: Create Tables in Supabase
-
-You can set up the required tables in two ways:
-
-#### Option 1: Direct SQL Execution
-
-In the Supabase SQL Editor, execute the following SQL:
-
-```sql
--- Create users table
-CREATE TABLE public.users (
-    id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL
-);
-
--- Add RLS policy
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Enable full access for authenticated users"
-ON public.users
-USING (auth.role() = 'authenticated');
-
--- Create compounds table
-CREATE TABLE public.compounds (
-    id SERIAL PRIMARY KEY,
-    cid INTEGER NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    iupac_name TEXT,
-    formula TEXT,
-    molecular_weight REAL,
-    synonyms TEXT[],
-    description TEXT,
-    chemical_class TEXT[],
-    inchi TEXT,
-    inchi_key TEXT,
-    smiles TEXT,
-    properties JSONB,
-    is_processed BOOLEAN DEFAULT FALSE,
-    image_url TEXT
-);
-
--- Add RLS policy
-ALTER TABLE public.compounds ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Enable full access for authenticated users"
-ON public.compounds
-USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for all users"
-ON public.compounds
-FOR SELECT
-TO public
-USING (true);
-
--- Add indexes
-CREATE INDEX compounds_cid_idx ON public.compounds (cid);
-CREATE INDEX compounds_name_idx ON public.compounds (name);
-CREATE INDEX compounds_molecular_weight_idx ON public.compounds (molecular_weight);
-CREATE INDEX compounds_chemical_class_idx ON public.compounds USING GIN (chemical_class);
-```
-
-#### Option 2: Using Migration Tools
-
-If you're using a migration tool like Drizzle:
-
-1. Configure Drizzle with your Supabase credentials
-2. Run migrations: `npx drizzle-kit push`
-
-### Step 3: Configure Environment Variables
-
-Add the following to your `.env` file:
-
-```
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_KEY=your-supabase-anon-key
-```
+   This script creates:
+   - The `users` and `compounds` tables
+   - Required indexes for performance
+   - A utility function for connection testing
+   - Row-level security policies
 
 ## Weaviate Setup
 
-### Step 1: Create a Weaviate Account
-
-1. Go to [Weaviate Cloud Console](https://console.weaviate.cloud/) and sign up for an account
-2. Create a new cluster (free sandbox is sufficient for testing)
-3. Note the cluster URL and API key
-
-### Step 2: Schema Configuration
-
-The application will automatically set up the schema when it starts, but you can manually create it using the following schema definition:
-
-```json
-{
-  "class": "Compound",
-  "description": "Chemical compound from PubChem",
-  "properties": [
-    {
-      "name": "cid",
-      "dataType": ["int"],
-      "description": "PubChem Compound ID"
-    },
-    {
-      "name": "name",
-      "dataType": ["text"],
-      "description": "Primary name of the compound"
-    },
-    {
-      "name": "iupacName",
-      "dataType": ["text"],
-      "description": "IUPAC name of the compound"
-    },
-    {
-      "name": "formula",
-      "dataType": ["text"],
-      "description": "Chemical formula"
-    },
-    {
-      "name": "molecularWeight",
-      "dataType": ["number"],
-      "description": "Molecular weight in g/mol"
-    },
-    {
-      "name": "synonyms",
-      "dataType": ["text[]"],
-      "description": "Alternative names for the compound"
-    },
-    {
-      "name": "description",
-      "dataType": ["text"],
-      "description": "Textual description of the compound"
-    },
-    {
-      "name": "chemicalClass",
-      "dataType": ["text[]"],
-      "description": "Chemical classification terms"
-    },
-    {
-      "name": "inchi",
-      "dataType": ["text"],
-      "description": "InChI identifier"
-    },
-    {
-      "name": "inchiKey",
-      "dataType": ["text"],
-      "description": "InChI key"
-    },
-    {
-      "name": "smiles",
-      "dataType": ["text"],
-      "description": "SMILES notation"
-    },
-    {
-      "name": "imageUrl",
-      "dataType": ["text"],
-      "description": "URL to compound structure image"
-    }
-  ],
-  "vectorizer": "text2vec-openai",
-  "moduleConfig": {
-    "text2vec-openai": {
-      "model": "ada",
-      "modelVersion": "002",
-      "type": "text"
-    }
-  }
-}
-```
-
-### Step 3: Configure Environment Variables
-
-Add the following to your `.env` file:
-
-```
-WEAVIATE_URL=your-cluster-url.weaviate.cloud
-WEAVIATE_API_KEY=your-weaviate-api-key
-WEAVIATE_SCHEME=https
-OPENAI_API_KEY=your-openai-api-key
-```
-
-**Note**: The OpenAI API key is required for text vectorization in Weaviate when using the `text2vec-openai` vectorizer.
+1. Create an account on [Weaviate Cloud Services](https://console.weaviate.cloud/) if you don't have one
+2. Create a new cluster (the free tier is sufficient for testing)
+3. Note the URL and API key for your cluster
+4. The application will automatically create the schema on startup
 
 ## Data Loading
 
-After setting up both databases, you can load PubChem compound data using the provided scripts:
+To load chemical compound data into your databases:
 
-```bash
-# Download a sample of compounds
-npm run download-compounds
+1. Prepare your compound data in JSON format (see examples in the `examples` directory)
+2. Use the provided upload script:
+   ```
+   ./scripts/upload-compounds.sh path/to/your/data
+   ```
 
-# For large-scale batch download (adjust as needed)
-npm run batch-download-compounds
+For more detailed instructions on data uploading, see the [UPLOAD_GUIDE.md](UPLOAD_GUIDE.md) file.
+
+## Example Data
+
+The `examples` directory contains sample compound data you can use to test the system:
+
+```
+./scripts/upload-compounds.sh --test
 ```
 
-The application will automatically load data from the `data` directory when it starts if the databases are empty.
+This will upload the example compounds (aspirin, caffeine, etc.) to your database.
 
 ## Testing Your Setup
 
-To verify your database setup:
+To verify that your database setup is working correctly:
 
-1. Start the application: `npm run dev`
-2. Navigate to the search page
-3. Try both keyword and semantic searches to confirm functionality
+1. Start the application using the "Start application" workflow
+2. Open the application in your browser
+3. Try searching for compounds using keywords like "aspirin" or "caffeine"
+4. If you've set up OpenAI integration, try semantic searches like "pain reliever" or "stimulant"
 
-If you encounter any issues, check the application logs for specific error messages and verify your environment variables.
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check your environment variables and database credentials
+2. Ensure your databases are accessible from your development environment
+3. Look for any error messages in the application logs
+4. Try running the SQL script again to ensure all database objects are created properly
+5. Make sure the version() function exists in your Supabase database (this is used for connection testing)
