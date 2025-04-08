@@ -1,4 +1,4 @@
-import type { Compound, CompoundSearchResult } from "@shared/schema";
+import type { Compound, CompoundSearchResult } from "../../shared/schema";
 import weaviate, { type WeaviateClient } from "weaviate-ts-client";
 import OpenAI from "openai";
 
@@ -200,8 +200,9 @@ export async function addCompound(compound: Compound): Promise<void> {
 export async function semanticSearch(
   query: string,
   limit: number = 10,
-  offset: number = 0
-): Promise<{ results: CompoundSearchResult[], totalResults: number }> {
+  offset: number = 0,
+  sortBy: string = "similarity"
+): Promise<{ results: CompoundSearchResult[], totalResults: number, query: string, page: number, totalPages: number }> {
   try {
     const client = await getClient();
     
@@ -241,12 +242,20 @@ export async function semanticSearch(
     const result = await weaviateQuery.do();
     
     if (!result.data || !result.data.Get || !result.data.Get[COMPOUND_CLASS]) {
-      return { results: [], totalResults: 0 };
+      return { 
+        results: [], 
+        totalResults: 0,
+        query,
+        page: Math.floor(offset / limit) + 1,
+        totalPages: 0
+      };
     }
     
     // Process results
     const compounds = result.data.Get[COMPOUND_CLASS];
     const totalResults = compounds.length; // This is not accurate but Weaviate doesn't return total count
+    const page = Math.floor(offset / limit) + 1;
+    const totalPages = Math.ceil(totalResults / limit);
     
     // Map to CompoundSearchResult type
     const results = compounds.map((item: any) => ({
@@ -261,7 +270,24 @@ export async function semanticSearch(
       similarity: item._additional?.certainty ? Math.round(item._additional.certainty * 100) : undefined,
     }));
     
-    return { results, totalResults };
+    // Sort results if requested (other than by similarity which is default from Weaviate)
+    if (sortBy === 'name') {
+      results.sort((a: CompoundSearchResult, b: CompoundSearchResult) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'molecular_weight' && results.every((r: CompoundSearchResult) => r.molecularWeight)) {
+      results.sort((a: CompoundSearchResult, b: CompoundSearchResult) => {
+        if (!a.molecularWeight) return 1;
+        if (!b.molecularWeight) return -1;
+        return a.molecularWeight - b.molecularWeight;
+      });
+    }
+    
+    return { 
+      results,
+      totalResults,
+      query,
+      page,
+      totalPages
+    };
     
   } catch (error) {
     console.error("Error performing semantic search:", error);

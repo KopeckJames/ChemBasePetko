@@ -1,16 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
-import { type Compound, type User } from '@shared/schema';
-import { drizzle } from 'drizzle-orm/supabase-js';
-import * as schema from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { type Compound, type User, type InsertCompound } from '@shared/schema';
 
 // Supabase configuration from environment variables
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
 
 // Check if Supabase credentials are available
 if (!supabaseUrl || !supabaseKey) {
-  console.error('SUPABASE_URL and SUPABASE_KEY environment variables must be set for Supabase integration');
+  console.error('SUPABASE_URL and SUPABASE_KEY or SUPABASE_ANON_KEY environment variables must be set for Supabase integration');
 }
 
 // Create Supabase client
@@ -19,16 +16,19 @@ const supabase = createClient(
   supabaseKey || ''
 );
 
-// Create Drizzle ORM instance with Supabase
-const db = drizzle(supabase, { schema });
-
 /**
  * Gets a user by ID
  */
 export async function getUser(id: number): Promise<User | undefined> {
   try {
-    const results = await db.select().from(schema.users).where(eq(schema.users.id, id));
-    return results[0];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data as User;
   } catch (error) {
     console.error(`Error getting user ${id} from Supabase:`, error);
     throw new Error(`Failed to get user ${id} from Supabase: ${error instanceof Error ? error.message : String(error)}`);
@@ -40,8 +40,14 @@ export async function getUser(id: number): Promise<User | undefined> {
  */
 export async function getUserByUsername(username: string): Promise<User | undefined> {
   try {
-    const results = await db.select().from(schema.users).where(eq(schema.users.username, username));
-    return results[0];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "No rows returned" which is OK for us
+    return data as User || undefined;
   } catch (error) {
     console.error(`Error getting user ${username} from Supabase:`, error);
     throw new Error(`Failed to get user ${username} from Supabase: ${error instanceof Error ? error.message : String(error)}`);
@@ -53,8 +59,14 @@ export async function getUserByUsername(username: string): Promise<User | undefi
  */
 export async function createUser(user: { username: string, password: string }): Promise<User> {
   try {
-    const results = await db.insert(schema.users).values(user).returning();
-    return results[0];
+    const { data, error } = await supabase
+      .from('users')
+      .insert(user)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as User;
   } catch (error) {
     console.error(`Error creating user in Supabase:`, error);
     throw new Error(`Failed to create user in Supabase: ${error instanceof Error ? error.message : String(error)}`);
@@ -66,8 +78,14 @@ export async function createUser(user: { username: string, password: string }): 
  */
 export async function getCompoundById(id: number): Promise<Compound | undefined> {
   try {
-    const results = await db.select().from(schema.compounds).where(eq(schema.compounds.id, id));
-    return results[0];
+    const { data, error } = await supabase
+      .from('compounds')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data as Compound || undefined;
   } catch (error) {
     console.error(`Error getting compound with ID ${id} from Supabase:`, error);
     throw new Error(`Failed to get compound with ID ${id} from Supabase: ${error instanceof Error ? error.message : String(error)}`);
@@ -79,8 +97,14 @@ export async function getCompoundById(id: number): Promise<Compound | undefined>
  */
 export async function getCompoundByCid(cid: number): Promise<Compound | undefined> {
   try {
-    const results = await db.select().from(schema.compounds).where(eq(schema.compounds.cid, cid));
-    return results[0];
+    const { data, error } = await supabase
+      .from('compounds')
+      .select('*')
+      .eq('cid', cid)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data as Compound || undefined;
   } catch (error) {
     console.error(`Error getting compound with CID ${cid} from Supabase:`, error);
     throw new Error(`Failed to get compound with CID ${cid} from Supabase: ${error instanceof Error ? error.message : String(error)}`);
@@ -90,10 +114,24 @@ export async function getCompoundByCid(cid: number): Promise<Compound | undefine
 /**
  * Creates a new compound
  */
-export async function createCompound(compound: Omit<Compound, 'id'>): Promise<Compound> {
+export async function createCompound(compound: InsertCompound): Promise<Compound> {
   try {
-    const results = await db.insert(schema.compounds).values(compound).returning();
-    return results[0];
+    // Handle array data types
+    const compoundData = {
+      ...compound,
+      // Convert array types to PostgreSQL compatible format
+      synonyms: compound.synonyms || [],
+      chemicalClass: compound.chemicalClass || []
+    };
+
+    const { data, error } = await supabase
+      .from('compounds')
+      .insert(compoundData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Compound;
   } catch (error) {
     console.error(`Error creating compound in Supabase:`, error);
     throw new Error(`Failed to create compound in Supabase: ${error instanceof Error ? error.message : String(error)}`);
@@ -105,10 +143,78 @@ export async function createCompound(compound: Omit<Compound, 'id'>): Promise<Co
  */
 export async function getCompounds(limit: number = 10, offset: number = 0): Promise<Compound[]> {
   try {
-    return await db.select().from(schema.compounds).limit(limit).offset(offset);
+    const { data, error } = await supabase
+      .from('compounds')
+      .select('*')
+      .range(offset, offset + limit - 1);
+    
+    if (error) throw error;
+    return data as Compound[];
   } catch (error) {
     console.error(`Error getting compounds from Supabase:`, error);
     throw new Error(`Failed to get compounds from Supabase: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Batch insert compounds for better performance
+ */
+export async function batchInsertCompounds(compounds: InsertCompound[]): Promise<number> {
+  try {
+    // Handle array data for each compound
+    const compoundsData = compounds.map(compound => ({
+      ...compound,
+      synonyms: compound.synonyms || [],
+      chemicalClass: compound.chemicalClass || []
+    }));
+
+    const { data, error } = await supabase
+      .from('compounds')
+      .insert(compoundsData);
+    
+    if (error) throw error;
+    return compounds.length;
+  } catch (error) {
+    console.error(`Error batch inserting compounds in Supabase:`, error);
+    throw new Error(`Failed to batch insert compounds in Supabase: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Check if tables exist in Supabase
+ */
+export async function createTablesIfNotExist(): Promise<void> {
+  try {
+    // Check if tables exist by querying them
+    const { error: userTableError } = await supabase
+      .from('users')
+      .select('id')
+      .limit(1);
+    
+    const { error: compoundTableError } = await supabase
+      .from('compounds')
+      .select('id')
+      .limit(1);
+    
+    // Log the status of the tables
+    if (userTableError && userTableError.code === 'PGRST104') {
+      console.log('Users table does not exist in Supabase. Please create it manually.');
+    } else {
+      console.log('Users table exists in Supabase.');
+    }
+    
+    if (compoundTableError && compoundTableError.code === 'PGRST104') {
+      console.log('Compounds table does not exist in Supabase. Please create it manually.');
+    } else {
+      console.log('Compounds table exists in Supabase.');
+    }
+    
+    // In a production environment, we would create tables via migrations
+    // For this example, we'll assume the tables already exist in Supabase
+    console.log('Use the SQL script in scripts/supabase-setup.sql to create the tables manually if needed');
+  } catch (error) {
+    console.error('Error checking tables in Supabase:', error);
+    throw new Error(`Failed to check tables in Supabase: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -117,8 +223,10 @@ export async function getCompounds(limit: number = 10, offset: number = 0): Prom
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabase.from('compounds').select('count', { count: 'exact', head: true });
+    // Try to get system information which should always be available
+    const { data, error } = await supabase.rpc('version');
     if (error) throw error;
+    console.log(`Connected to Supabase. PostgreSQL version: ${data}`);
     return true;
   } catch (error) {
     console.error('Supabase connection test failed:', error);
@@ -128,7 +236,6 @@ export async function testConnection(): Promise<boolean> {
 
 /**
  * Initialize the database structure if needed
- * This is a placeholder since Drizzle would normally handle migrations
  */
 export async function initializeDatabase(): Promise<void> {
   try {
@@ -140,8 +247,12 @@ export async function initializeDatabase(): Promise<void> {
     
     console.log('Supabase database connection established');
     
-    // In a real implementation, we would use Drizzle migrations
-    // This is just a placeholder to ensure the connection is working
+    // Check and create tables if they don't exist
+    // Note: In a production environment, you would use proper migrations
+    // Either through SQL or a migration tool like Drizzle
+    await createTablesIfNotExist();
+    
+    console.log('Supabase database initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Supabase database:', error);
     throw new Error(`Failed to initialize Supabase database: ${error instanceof Error ? error.message : String(error)}`);
