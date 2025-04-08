@@ -43,6 +43,7 @@ The application includes scripts for:
 - `load-compounds.ts`: Load downloaded compounds into databases
 - `check-progress.ts`: Monitor download progress
 - `test-semantic-search.ts`: Test semantic search functionality
+- `create-data-archive.ts`: Create a downloadable zip archive of compound data
 
 ## License
 
