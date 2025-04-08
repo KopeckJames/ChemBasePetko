@@ -1,15 +1,18 @@
 import { createClient } from "@astrajs/collections";
 import { Compound, CompoundSearchResult, SearchQuery, SearchResponse } from "../../shared/schema";
 
-// AstraDB (DataStax) configuration
-// We're using the organization ID and database name from the token (1) file
-const ASTRA_DB_ID = process.env.ASTRA_DB_ID || "351f0672-8a56-4b98-b688-aac4942d7a77"; 
-const ASTRA_ORG_ID = process.env.ASTRA_ORG_ID || "351f0672-8a56-4b98-b688-aac4942d7a77"; 
-const ASTRA_DB_NAME = process.env.ASTRA_DB_NAME || "chemsearch";
-const ASTRA_DB_REGION = process.env.ASTRA_DB_REGION || "us-east1";
-const ASTRA_DB_KEYSPACE = process.env.ASTRA_DB_KEYSPACE || "chemsearch";
+// AstraDB (DataStax) configuration from token file
+// Using values from attached_assets/jameskopeckpro@gmail.com-token (1).json
+const ASTRA_CLIENT_ID = process.env.ASTRA_CLIENT_ID || "YeyhvYemXipawpEtFvyOGPip";
+const ASTRA_CLIENT_SECRET = process.env.ASTRA_CLIENT_SECRET || "c,4kGvSqH164X.EXAqwb,efaqrWbGnGdRPoLTT5YuJBFYS81v-2TDyPx6-LXqpZ+6iJS.QldF4rxR,q+O+p,kBsKNK8ZTx93QEedL-aW,dong0EyttqbzfyE5PpL_Zg.";
+const ASTRA_ORG_ID = process.env.ASTRA_ORG_ID || "351f0672-8a56-4b98-b688-aac4942d7a77";
 const ASTRA_DB_COLLECTION = "compounds";
+
+// The generated token in the file
 const ASTRA_DB_TOKEN = process.env.ASTRA_DB_TOKEN || "AstraCS:YeyhvYemXipawpEtFvyOGPip:2e89f5a83866f2ff4ce7b1ac408809f0d6f17e8b4dff151d721759f972eee73e";
+
+// Updated API endpoint for DataStax Astra - this is the standard endpoint format
+const ASTRA_API_ENDPOINT = "https://api.astra.datastax.com";
 
 let astraClient: any = null;
 let compoundsCollection: any = null;
