@@ -78,10 +78,23 @@ export class MemStorage implements IStorage {
   async createCompound(insertCompound: InsertCompound): Promise<Compound> {
     const id = this.currentCompoundId++;
     
+    // Transform to ensure type compatibility
     const compound: Compound = { 
-      ...insertCompound, 
-      id, 
-      isProcessed: false
+      id,
+      cid: insertCompound.cid,
+      name: insertCompound.name,
+      iupacName: insertCompound.iupacName || null,
+      formula: insertCompound.formula || null,
+      molecularWeight: insertCompound.molecularWeight || null,
+      synonyms: insertCompound.synonyms || null,
+      description: insertCompound.description || null,
+      chemicalClass: insertCompound.chemicalClass || null,
+      inchi: insertCompound.inchi || null,
+      inchiKey: insertCompound.inchiKey || null,
+      smiles: insertCompound.smiles || null,
+      properties: insertCompound.properties || {},
+      isProcessed: false,
+      imageUrl: insertCompound.imageUrl || null
     };
     
     this.compounds.set(id, compound);
@@ -159,14 +172,13 @@ export class MemStorage implements IStorage {
       
       // Convert to CompoundSearchResult format
       const results: CompoundSearchResult[] = pagedCompounds.map(compound => ({
-        id: compound.id,
         cid: compound.cid,
         name: compound.name,
-        iupacName: compound.iupacName,
-        formula: compound.formula,
-        molecularWeight: compound.molecularWeight,
-        chemicalClass: compound.chemicalClass,
-        description: compound.description,
+        iupacName: compound.iupacName !== null ? compound.iupacName : undefined,
+        formula: compound.formula !== null ? compound.formula : undefined,
+        molecularWeight: compound.molecularWeight !== null ? compound.molecularWeight : undefined,
+        chemicalClass: compound.chemicalClass !== null ? compound.chemicalClass : undefined,
+        description: compound.description !== null ? compound.description : undefined,
         similarity: 0, // No similarity score for keyword search
         imageUrl: compound.imageUrl || this.getDefaultImageUrl(compound.cid)
       }));

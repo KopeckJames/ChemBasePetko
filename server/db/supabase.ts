@@ -53,21 +53,47 @@ export async function addCompound(compound: InsertCompound): Promise<Compound> {
     const supabase = getClient();
     
     // Check if compound with this CID already exists
-    const { data: existingCompound } = await supabase
+    const { data: existingCompound, error: checkError } = await supabase
       .from('compounds')
       .select('id')
       .eq('cid', compound.cid)
       .maybeSingle();
     
+    if (checkError) {
+      console.error(`Error checking if compound ${compound.cid} exists in Supabase:`, 
+        checkError.message,
+        checkError.details,
+        checkError.hint);
+        
+      // Create detailed error info for logging
+      const errorInfo = {
+        message: checkError.message,
+        details: checkError.details,
+        hint: checkError.hint,
+        code: checkError.code
+      };
+      console.error(`Full error details: ${JSON.stringify(errorInfo)}`);
+      
+      throw new Error(`Supabase error checking compound: ${checkError.message}`);
+    }
+    
     if (existingCompound) {
       console.log(`Compound with CID ${compound.cid} already exists, skipping`);
       
       // Return the existing compound data
-      const { data: fullCompound } = await supabase
+      const { data: fullCompound, error: getError } = await supabase
         .from('compounds')
         .select('*')
         .eq('cid', compound.cid)
         .single();
+      
+      if (getError) {
+        console.error(`Error retrieving existing compound ${compound.cid} from Supabase:`, 
+          getError.message,
+          getError.details,
+          getError.hint);
+        throw new Error(`Supabase error retrieving compound: ${getError.message}`);
+      }
       
       return fullCompound as Compound;
     }
@@ -80,15 +106,42 @@ export async function addCompound(compound: InsertCompound): Promise<Compound> {
       .single();
     
     if (error) {
-      console.error(`Error adding compound ${compound.cid} to Supabase:`, error.message, error.details, error.hint);
-      throw error;
+      console.error(`Error adding compound ${compound.cid} to Supabase:`, 
+        error.message, 
+        error.details, 
+        error.hint);
+        
+      // Create detailed error info for logging
+      const errorInfo = {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      };
+      console.error(`Full error details: ${JSON.stringify(errorInfo)}`);
+      
+      throw new Error(`Supabase error adding compound: ${error.message}`);
     }
     
     console.log(`Added compound ${compound.cid} to Supabase`);
     return data as Compound;
-  } catch (error) {
-    console.error(`Error adding compound ${compound.cid} to Supabase:`, error);
-    throw error;
+  } catch (error: any) {
+    // Handle any other errors, providing a detailed error message for debugging
+    let errorMessage = "Unknown error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      try {
+        errorMessage = JSON.stringify(error);
+      } catch (e) {
+        errorMessage = "Unstringifiable error object";
+      }
+    } else if (error !== undefined && error !== null) {
+      errorMessage = String(error);
+    }
+    
+    console.error(`Error adding compound ${compound.cid} to Supabase:`, errorMessage);
+    throw new Error(`Error with Supabase: ${errorMessage}`);
   }
 }
 

@@ -1,9 +1,11 @@
 import { createClient } from "@astrajs/collections";
 import { Compound, CompoundSearchResult, SearchQuery, SearchResponse } from "../../shared/schema";
 
-// AstraDB configuration
-// Use a database ID without special characters like @ for compatibility
-const ASTRA_DB_ID = process.env.ASTRA_DB_ID || "3e51f067-28a56-4b98-b688-aac4942d7a77"; 
+// AstraDB (DataStax) configuration
+// We're using the organization ID and database name from the token (1) file
+const ASTRA_DB_ID = process.env.ASTRA_DB_ID || "351f0672-8a56-4b98-b688-aac4942d7a77"; 
+const ASTRA_ORG_ID = process.env.ASTRA_ORG_ID || "351f0672-8a56-4b98-b688-aac4942d7a77"; 
+const ASTRA_DB_NAME = process.env.ASTRA_DB_NAME || "chemsearch";
 const ASTRA_DB_REGION = process.env.ASTRA_DB_REGION || "us-east1";
 const ASTRA_DB_KEYSPACE = process.env.ASTRA_DB_KEYSPACE || "chemsearch";
 const ASTRA_DB_COLLECTION = "compounds";
@@ -19,17 +21,50 @@ async function getClient(): Promise<any> {
   if (!astraClient) {
     console.log("Initializing AstraDB client...");
     try {
-      astraClient = await createClient({
-        astraDatabaseId: ASTRA_DB_ID,
-        astraDatabaseRegion: ASTRA_DB_REGION,
-        applicationToken: ASTRA_DB_TOKEN,
-      });
+      // Standard approach to connect to AstraDB/DataStax
+      try {
+        console.log("Connecting to DataStax using standard approach...");
+        
+        // The API expects these standard parameters
+        astraClient = await createClient({
+          astraDatabaseId: ASTRA_DB_ID,
+          astraDatabaseRegion: ASTRA_DB_REGION,
+          applicationToken: ASTRA_DB_TOKEN
+        });
+        
+        console.log("Connected to DataStax successfully");
+      } catch (error) {
+        console.error("Error connecting to DataStax:", error);
+        
+        // Log detailed error info to help debug
+        if (error instanceof Error) {
+          console.error(`Error type: ${error.name}, Message: ${error.message}`);
+          console.error(`Stack trace: ${error.stack}`);
+        } else {
+          console.error(`Non-Error object thrown: ${JSON.stringify(error)}`);
+        }
+        
+        // Instead of throwing, we'll log the error and return null
+        // This will cause operations to fail gracefully and allow fallback to in-memory storage
+        console.log("Will use in-memory storage as fallback");
+        return null;
+      }
       
-      compoundsCollection = astraClient.namespace(ASTRA_DB_KEYSPACE).collection(ASTRA_DB_COLLECTION);
-      console.log("Connected to AstraDB successfully");
+      // Only try to create collection if client was initialized
+      if (astraClient) {
+        try {
+          compoundsCollection = astraClient.namespace(ASTRA_DB_KEYSPACE).collection(ASTRA_DB_COLLECTION);
+          console.log("Connected to AstraDB collection successfully");
+        } catch (collectionError) {
+          console.error("Error accessing collection:", collectionError);
+          // Return null to indicate we should fall back to in-memory
+          return null;
+        }
+      }
     } catch (error) {
-      console.error("Error connecting to AstraDB:", error);
-      throw error;
+      console.error("Error in overall AstraDB connection process:", error);
+      // Return null to indicate we should fall back to in-memory
+      return null;
     }
   }
   return astraClient;
@@ -40,11 +75,18 @@ async function getClient(): Promise<any> {
  */
 export async function initializeSchema(): Promise<void> {
   try {
-    await getClient();
+    const client = await getClient();
+    
+    if (!client) {
+      console.log("AstraDB client is null, falling back to in-memory storage");
+      return;
+    }
+    
     console.log("AstraDB schema initialized successfully");
   } catch (error) {
     console.error("Error initializing AstraDB schema:", error);
-    throw error;
+    console.log("Will use in-memory storage as fallback");
+    // Don't throw the error, let the system fall back to in-memory storage
   }
 }
 
@@ -53,7 +95,13 @@ export async function initializeSchema(): Promise<void> {
  */
 export async function addCompound(compound: Compound): Promise<void> {
   try {
-    await getClient();
+    const client = await getClient();
+    
+    // If client is null, we're in fallback mode
+    if (!client || !compoundsCollection) {
+      console.log(`Skipping AstraDB insertion for compound ${compound.cid} - using in-memory storage`);
+      return;
+    }
     
     // Generate a document ID based on CID
     const documentId = `compound_${compound.cid}`;
@@ -77,12 +125,17 @@ export async function addCompound(compound: Compound): Promise<void> {
       created_at: new Date().toISOString(),
     };
     
-    // Add to AstraDB
-    await compoundsCollection.create(documentId, vectorData);
-    console.log(`Added compound ${compound.cid} to AstraDB`);
+    try {
+      // Add to AstraDB
+      await compoundsCollection.create(documentId, vectorData);
+      console.log(`Added compound ${compound.cid} to AstraDB`);
+    } catch (insertError) {
+      console.error(`Error inserting compound ${compound.cid} into AstraDB:`, insertError);
+      // Don't throw, just log the error and continue
+    }
   } catch (error) {
-    console.error(`Error adding compound ${compound.cid} to AstraDB:`, error);
-    throw error;
+    console.error(`Error in AstraDB addCompound for ${compound.cid}:`, error);
+    // Don't throw the error - this allows the in-memory storage to still work
   }
 }
 
@@ -93,7 +146,19 @@ export async function semanticSearch(
   searchQuery: SearchQuery
 ): Promise<SearchResponse> {
   try {
-    await getClient();
+    const client = await getClient();
+    
+    // If client is null, we're in fallback mode
+    if (!client || !compoundsCollection) {
+      console.log("AstraDB client is null, returning empty search results");
+      return {
+        results: [],
+        totalResults: 0,
+        page: searchQuery.page || 1,
+        totalPages: 0,
+        query: searchQuery.query || ""
+      };
+    }
     
     const { query, page = 1, limit = 10, sort } = searchQuery;
     const sortBy = sort || "molecular_weight";
@@ -142,44 +207,63 @@ export async function semanticSearch(
       searchOptions.filter = filterConditions;
     }
     
-    // Perform text search if query is provided
-    let results;
-    if (query && query.trim()) {
-      results = await compoundsCollection.find({ 
-        name: { $regex: `.*${query}.*`, $options: "i" }
-      }, searchOptions);
-    } else {
-      results = await compoundsCollection.find(filterConditions, searchOptions);
+    try {
+      // Perform text search if query is provided
+      let results;
+      if (query && query.trim()) {
+        results = await compoundsCollection.find({ 
+          name: { $regex: `.*${query}.*`, $options: "i" }
+        }, searchOptions);
+      } else {
+        results = await compoundsCollection.find(filterConditions, searchOptions);
+      }
+      
+      // Convert results to CompoundSearchResult format
+      const results_array: CompoundSearchResult[] = results.data.map((doc: any) => ({
+        id: Number(doc.id.replace("compound_", "")),
+        cid: doc.cid,
+        name: doc.name,
+        formula: doc.formula,
+        smiles: doc.smiles || "",
+        molecularWeight: doc.molecularWeight,
+        description: doc.description || "",
+        chemicalClass: doc.chemicalClass || null,
+        imageUrl: doc.imageUrl || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${doc.cid}&width=300&height=300`,
+        similarity: 1 // Default similarity score for now
+      }));
+      
+      // Count total results for pagination
+      const countResponse = await compoundsCollection.find(filterConditions, { count: true });
+      const total = countResponse.count || 0;
+      
+      return {
+        results: results_array,
+        totalResults: total,
+        page,
+        totalPages: Math.ceil(total / limit),
+        query: query || ""
+      };
+    } catch (searchError) {
+      console.error("Error during AstraDB search operation:", searchError);
+      // Return empty results instead of throwing an error
+      return {
+        results: [],
+        totalResults: 0,
+        page: searchQuery.page || 1,
+        totalPages: 0,
+        query: searchQuery.query || ""
+      };
     }
-    
-    // Convert results to CompoundSearchResult format
-    const results_array: CompoundSearchResult[] = results.data.map((doc: any) => ({
-      id: Number(doc.id.replace("compound_", "")),
-      cid: doc.cid,
-      name: doc.name,
-      formula: doc.formula,
-      smiles: doc.smiles || "",
-      molecularWeight: doc.molecularWeight,
-      description: doc.description || "",
-      chemicalClass: doc.chemicalClass || null,
-      imageUrl: doc.imageUrl || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${doc.cid}&width=300&height=300`,
-      similarity: 1 // Default similarity score for now
-    }));
-    
-    // Count total results for pagination
-    const countResponse = await compoundsCollection.find(filterConditions, { count: true });
-    const total = countResponse.count || 0;
-    
-    return {
-      results: results_array,
-      totalResults: total,
-      page,
-      totalPages: Math.ceil(total / limit),
-      query: query || ""
-    };
   } catch (error) {
     console.error("Error performing semantic search in AstraDB:", error);
-    throw error;
+    // Return empty results instead of throwing
+    return {
+      results: [],
+      totalResults: 0,
+      page: searchQuery.page || 1,
+      totalPages: 0,
+      query: searchQuery.query || ""
+    };
   }
 }
 
@@ -188,36 +272,48 @@ export async function semanticSearch(
  */
 export async function getCompoundByCid(cid: number): Promise<Compound | null> {
   try {
-    await getClient();
+    const client = await getClient();
     
-    const documentId = `compound_${cid}`;
-    const response = await compoundsCollection.get(documentId);
-    
-    if (!response) {
+    // If client is null, we're in fallback mode
+    if (!client || !compoundsCollection) {
+      console.log(`AstraDB client is null, cannot get compound ${cid}`);
       return null;
     }
     
-    // Convert AstraDB document to Compound format
-    return {
-      id: parseInt(response.id.replace("compound_", "")),
-      cid: response.cid,
-      name: response.name,
-      iupacName: response.iupacName || response.name,
-      formula: response.formula,
-      molecularWeight: response.molecularWeight,
-      synonyms: response.synonyms || [],
-      description: response.description || "",
-      chemicalClass: response.chemicalClass || [],
-      inchi: response.inchi || "",
-      inchiKey: response.inchiKey || "",
-      smiles: response.smiles || "",
-      properties: response.properties || {},
-      isProcessed: true,
-      imageUrl: response.imageUrl || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${response.cid}&width=300&height=300`
-    };
+    try {
+      const documentId = `compound_${cid}`;
+      const response = await compoundsCollection.get(documentId);
+      
+      if (!response) {
+        return null;
+      }
+      
+      // Convert AstraDB document to Compound format
+      return {
+        id: parseInt(response.id.replace("compound_", "")),
+        cid: response.cid,
+        name: response.name,
+        iupacName: response.iupacName || response.name,
+        formula: response.formula,
+        molecularWeight: response.molecularWeight,
+        synonyms: response.synonyms || [],
+        description: response.description || "",
+        chemicalClass: response.chemicalClass || [],
+        inchi: response.inchi || "",
+        inchiKey: response.inchiKey || "",
+        smiles: response.smiles || "",
+        properties: response.properties || {},
+        isProcessed: true,
+        imageUrl: response.imageUrl || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${response.cid}&width=300&height=300`
+      };
+    } catch (getError) {
+      console.error(`Error retrieving compound ${cid} from AstraDB:`, getError);
+      return null;
+    }
   } catch (error) {
-    console.error(`Error getting compound ${cid} from AstraDB:`, error);
-    throw error;
+    console.error(`Error in getCompoundByCid for ${cid} from AstraDB:`, error);
+    // Return null instead of throwing error
+    return null;
   }
 }
 
