@@ -12,13 +12,12 @@ if (!supabaseUrl || !supabaseKey) {
 
 // Helper function to sanitize Supabase URL
 function sanitizeSupabaseUrl(url: string): string {
-  // Make sure URL ends with '/rest/v1'
-  if (!url.endsWith('/rest/v1')) {
-    // Remove trailing slash if present
-    const baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-    return `${baseUrl}/rest/v1`;
-  }
-  return url;
+  // Remove trailing slash if present
+  const baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+  
+  // For API operations, we don't need to add /rest/v1
+  // as the Supabase client handles this internally
+  return baseUrl;
 }
 
 // Create Supabase client with sanitized URL
