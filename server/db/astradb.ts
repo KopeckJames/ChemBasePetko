@@ -24,17 +24,17 @@ async function getClient(): Promise<any> {
       // Check required environment variables
       if (!ASTRA_DB_TOKEN) {
         console.error("Missing ASTRA_DB_TOKEN environment variable");
-        return null;
+        throw new Error("Missing ASTRA_DB_TOKEN environment variable");
       }
       
       if (!ASTRA_DB_ID) {
         console.error("Missing ASTRA_DB_ID environment variable");
-        return null;
+        throw new Error("Missing ASTRA_DB_ID environment variable");
       }
       
       if (!ASTRA_DB_REGION) {
         console.error("Missing ASTRA_DB_REGION environment variable");
-        return null;
+        throw new Error("Missing ASTRA_DB_REGION environment variable");
       }
       
       // Test network connectivity to the DataStax API endpoint first
@@ -61,7 +61,7 @@ async function getClient(): Promise<any> {
         console.error("Network connectivity test to DataStax failed:", 
           networkError instanceof Error ? networkError.message : String(networkError));
         console.log("This is likely a DNS resolution issue or connectivity problem");
-        return null;
+        throw new Error(`Cannot connect to DataStax AstraDB: ${networkError instanceof Error ? networkError.message : String(networkError)}`);
       }
       
       // Standard approach to connect to AstraDB/DataStax
@@ -87,10 +87,9 @@ async function getClient(): Promise<any> {
           console.error(`Non-Error object thrown: ${JSON.stringify(error)}`);
         }
         
-        // Instead of throwing, we'll log the error and return null
-        // This will cause operations to fail gracefully and allow fallback to in-memory storage
-        console.log("Will use in-memory storage as fallback");
-        return null;
+        // Throw the error instead of returning null
+        // We want to fail hard if we can't connect to AstraDB
+        throw new Error(`Could not connect to DataStax AstraDB: ${error instanceof Error ? error.message : String(error)}`);
       }
       
       // Only try to create collection if client was initialized
@@ -111,7 +110,8 @@ async function getClient(): Promise<any> {
           } catch (opError) {
             console.error("Error testing collection operation:", 
               opError instanceof Error ? opError.message : String(opError));
-            console.log("Collection exists but operations may not work");
+            console.log("Collection exists but operations may not work properly");
+            throw new Error(`Could not verify AstraDB collection operations: ${opError instanceof Error ? opError.message : String(opError)}`);
           }
           
           console.log("Connected to AstraDB collection successfully");
@@ -119,10 +119,10 @@ async function getClient(): Promise<any> {
           console.error("Error accessing collection:", 
             collectionError instanceof Error ? collectionError.message : String(collectionError));
           
-          // Return null to indicate we should fall back to in-memory
+          // Reset variables and throw error
           astraClient = null;
           compoundsCollection = null;
-          return null;
+          throw new Error(`Could not access AstraDB collection: ${collectionError instanceof Error ? collectionError.message : String(collectionError)}`);
         }
       }
     } catch (error) {
@@ -133,8 +133,8 @@ async function getClient(): Promise<any> {
       astraClient = null;
       compoundsCollection = null;
       
-      // Return null to indicate we should fall back to in-memory
-      return null;
+      // Throw error to fail hard
+      throw new Error(`Failed to initialize AstraDB: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   
@@ -149,15 +149,14 @@ export async function initializeSchema(): Promise<void> {
     const client = await getClient();
     
     if (!client) {
-      console.log("AstraDB client is null, falling back to in-memory storage");
-      return;
+      console.error("AstraDB client is null, cannot initialize schema");
+      throw new Error("AstraDB client is null, cannot initialize schema");
     }
     
     console.log("AstraDB schema initialized successfully");
   } catch (error) {
     console.error("Error initializing AstraDB schema:", error);
-    console.log("Will use in-memory storage as fallback");
-    // Don't throw the error, let the system fall back to in-memory storage
+    throw new Error(`Failed to initialize AstraDB schema: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -170,8 +169,8 @@ export async function addCompound(compound: Compound): Promise<void> {
     
     // If client is null, we're in fallback mode
     if (!client || !compoundsCollection) {
-      console.log(`Skipping AstraDB insertion for compound ${compound.cid} - using in-memory storage`);
-      return;
+      console.error(`AstraDB client is null, cannot add compound ${compound.cid}`);
+      throw new Error(`AstraDB client is null, cannot add compound ${compound.cid}`);
     }
     
     // Generate a document ID based on CID
@@ -202,11 +201,11 @@ export async function addCompound(compound: Compound): Promise<void> {
       console.log(`Added compound ${compound.cid} to AstraDB`);
     } catch (insertError) {
       console.error(`Error inserting compound ${compound.cid} into AstraDB:`, insertError);
-      // Don't throw, just log the error and continue
+      throw new Error(`Failed to insert compound ${compound.cid} into AstraDB: ${insertError instanceof Error ? insertError.message : String(insertError)}`);
     }
   } catch (error) {
     console.error(`Error in AstraDB addCompound for ${compound.cid}:`, error);
-    // Don't throw the error - this allows the in-memory storage to still work
+    throw new Error(`Error in AstraDB addCompound for ${compound.cid}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -221,14 +220,8 @@ export async function semanticSearch(
     
     // If client is null, we're in fallback mode
     if (!client || !compoundsCollection) {
-      console.log("AstraDB client is null, returning empty search results");
-      return {
-        results: [],
-        totalResults: 0,
-        page: searchQuery.page || 1,
-        totalPages: 0,
-        query: searchQuery.query || ""
-      };
+      console.error("AstraDB client is null, cannot search");
+      throw new Error("AstraDB client is null, cannot perform search");
     }
     
     const { query, page = 1, limit = 10, sort } = searchQuery;
@@ -316,25 +309,11 @@ export async function semanticSearch(
       };
     } catch (searchError) {
       console.error("Error during AstraDB search operation:", searchError);
-      // Return empty results instead of throwing an error
-      return {
-        results: [],
-        totalResults: 0,
-        page: searchQuery.page || 1,
-        totalPages: 0,
-        query: searchQuery.query || ""
-      };
+      throw new Error(`Failed to search in AstraDB: ${searchError instanceof Error ? searchError.message : String(searchError)}`);
     }
   } catch (error) {
     console.error("Error performing semantic search in AstraDB:", error);
-    // Return empty results instead of throwing
-    return {
-      results: [],
-      totalResults: 0,
-      page: searchQuery.page || 1,
-      totalPages: 0,
-      query: searchQuery.query || ""
-    };
+    throw new Error(`Error performing search in AstraDB: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -345,10 +324,10 @@ export async function getCompoundByCid(cid: number): Promise<Compound | null> {
   try {
     const client = await getClient();
     
-    // If client is null, we're in fallback mode
+    // If client is null, throw error
     if (!client || !compoundsCollection) {
-      console.log(`AstraDB client is null, cannot get compound ${cid}`);
-      return null;
+      console.error(`AstraDB client is null, cannot get compound ${cid}`);
+      throw new Error(`AstraDB client is null, cannot get compound ${cid}`);
     }
     
     try {
@@ -356,7 +335,7 @@ export async function getCompoundByCid(cid: number): Promise<Compound | null> {
       const response = await compoundsCollection.get(documentId);
       
       if (!response) {
-        return null;
+        return null; // This is okay - the compound might just not exist
       }
       
       // Convert AstraDB document to Compound format
@@ -379,12 +358,11 @@ export async function getCompoundByCid(cid: number): Promise<Compound | null> {
       };
     } catch (getError) {
       console.error(`Error retrieving compound ${cid} from AstraDB:`, getError);
-      return null;
+      throw new Error(`Failed to retrieve compound ${cid} from AstraDB: ${getError instanceof Error ? getError.message : String(getError)}`);
     }
   } catch (error) {
     console.error(`Error in getCompoundByCid for ${cid} from AstraDB:`, error);
-    // Return null instead of throwing error
-    return null;
+    throw new Error(`Error getting compound ${cid} from AstraDB: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

@@ -50,7 +50,9 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    for (const [_, user] of this.users.entries()) {
+    // Convert to array first to avoid iteration issues with Map.entries()
+    const usersArray = Array.from(this.users.values());
+    for (const user of usersArray) {
       if (user.username === username) {
         return user;
       }
@@ -68,11 +70,25 @@ export class MemStorage implements IStorage {
   // Compound methods
 
   async getCompound(cid: number): Promise<Compound | undefined> {
-    return this.compoundsByCid.get(cid);
+    try {
+      // Query Supabase directly - no fallback to in-memory
+      const compound = await supabaseClient.getCompoundByCid(cid);
+      return compound || undefined;
+    } catch (error) {
+      console.error(`Error getting compound ${cid} from Supabase:`, error);
+      throw new Error(`Cannot retrieve compound from database: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   async getCompoundById(id: number): Promise<Compound | undefined> {
-    return this.compounds.get(id);
+    try {
+      // Query Supabase directly - no fallback to in-memory
+      const compound = await supabaseClient.getCompoundById(id);
+      return compound || undefined;
+    } catch (error) {
+      console.error(`Error getting compound by ID ${id} from Supabase:`, error);
+      throw new Error(`Cannot retrieve compound from database: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   async createCompound(insertCompound: InsertCompound): Promise<Compound> {
@@ -106,96 +122,27 @@ export class MemStorage implements IStorage {
   }
 
   async getCompounds(limit: number = 100, offset: number = 0): Promise<Compound[]> {
-    // Convert map values to array
-    const compounds = Array.from(this.compounds.values());
-    
-    // Apply pagination
-    return compounds.slice(offset, offset + limit);
+    try {
+      // Query Supabase directly - no fallback to in-memory
+      return await supabaseClient.getCompounds(limit, offset);
+    } catch (error) {
+      console.error(`Error getting compounds from Supabase:`, error);
+      throw new Error(`Cannot retrieve compounds from database: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   async searchCompounds(searchQuery: SearchQuery): Promise<SearchResponse> {
     try {
-      // If semantic search is requested and we have connected to AstraDB/Weaviate,
-      // use vector database for search
+      // If semantic search is requested, use AstraDB vector database 
       if (searchQuery.searchType === "semantic") {
-        try {
-          return await astraDbClient.semanticSearch(searchQuery);
-        } catch (error) {
-          console.error("Error performing semantic search in vector database:", error);
-          console.log("Falling back to keyword search in memory storage");
-          // Fall back to keyword search
-          searchQuery.searchType = "keyword";
-        }
+        return await astraDbClient.semanticSearch(searchQuery);
       }
       
-      // For keyword search or as fallback, use local search in memory storage
-      // Convert map values to array
-      const allCompounds = Array.from(this.compounds.values());
-      
-      // Extract search parameters
-      const { query, page = 1, limit = 10, sort = "relevance", molecularWeight, chemicalClass } = searchQuery;
-      const offset = (page - 1) * limit;
-      
-      // Filter compounds by search query
-      let filteredCompounds = allCompounds;
-      
-      if (query && query.trim()) {
-        const searchTerm = query.toLowerCase();
-        filteredCompounds = filteredCompounds.filter(compound => {
-          // Search in name, formula, and description
-          const nameMatch = compound.name?.toLowerCase().includes(searchTerm);
-          const formulaMatch = compound.formula?.toLowerCase().includes(searchTerm);
-          const descriptionMatch = compound.description?.toLowerCase().includes(searchTerm);
-          return nameMatch || formulaMatch || descriptionMatch;
-        });
-      }
-      
-      // Apply molecular weight filter if provided
-      if (molecularWeight && molecularWeight !== "all") {
-        filteredCompounds = filteredCompounds.filter(compound => 
-          this.filterByMolecularWeight(compound, molecularWeight)
-        );
-      }
-      
-      // Apply chemical class filter if provided
-      if (chemicalClass && chemicalClass !== "all") {
-        filteredCompounds = filteredCompounds.filter(compound => 
-          compound.chemicalClass && compound.chemicalClass.includes(chemicalClass)
-        );
-      }
-      
-      // Sort results
-      const sortedCompounds = this.sortCompounds(filteredCompounds, sort);
-      
-      // Apply pagination
-      const pagedCompounds = sortedCompounds.slice(offset, offset + limit);
-      
-      // Convert to CompoundSearchResult format
-      const results: CompoundSearchResult[] = pagedCompounds.map(compound => ({
-        cid: compound.cid,
-        name: compound.name,
-        iupacName: compound.iupacName !== null ? compound.iupacName : undefined,
-        formula: compound.formula !== null ? compound.formula : undefined,
-        molecularWeight: compound.molecularWeight !== null ? compound.molecularWeight : undefined,
-        chemicalClass: compound.chemicalClass !== null ? compound.chemicalClass : undefined,
-        description: compound.description !== null ? compound.description : undefined,
-        similarity: 0, // No similarity score for keyword search
-        imageUrl: compound.imageUrl || this.getDefaultImageUrl(compound.cid)
-      }));
-      
-      // Sort the results for final presentation
-      const sortedResults = this.sortSearchResults(results, sort);
-      
-      return {
-        results: sortedResults,
-        totalResults: filteredCompounds.length,
-        page,
-        totalPages: Math.ceil(filteredCompounds.length / limit),
-        query
-      };
+      // For keyword search, use Supabase directly - no fallback to in-memory storage
+      return await supabaseClient.searchCompounds(searchQuery);
     } catch (error) {
       console.error("Error searching compounds:", error);
-      throw error;
+      throw new Error(`Cannot search compounds in database: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -283,45 +230,52 @@ export class MemStorage implements IStorage {
     
     console.log("Initializing database...");
     
-    // Initialize external database connections
+    // Initialize Supabase database connection with more resilience
     try {
       await supabaseClient.initializeDatabase();
       supabaseConnected = true;
       console.log("Supabase database initialized successfully");
     } catch (error) {
       console.error("Error initializing Supabase:", error instanceof Error ? error.message : String(error));
-      console.log("Will continue with in-memory storage for relational data");
+      console.warn("⚠️ Proceeding with application startup despite Supabase initialization issues");
+      // We'll proceed despite errors - the application will show appropriate errors to users
     }
     
+    // Initialize AstraDB database connection with more resilience
     try {
       await astraDbClient.initializeSchema();
       astradbConnected = true;
       console.log("AstraDB database initialized successfully");
     } catch (error) {
       console.error("Error initializing AstraDB:", error instanceof Error ? error.message : String(error));
-      console.log("Will continue with in-memory storage for vector search");
+      console.warn("⚠️ Proceeding with application startup despite AstraDB initialization issues");
+      // We'll proceed despite errors - the application will show appropriate errors to users
     }
     
-    if (!supabaseConnected && !astradbConnected) {
-      console.log("NOTICE: Both external databases are unavailable. Using in-memory storage only.");
-      console.log("Some functionality may be limited, but the application will continue to work.");
-    } else if (!supabaseConnected) {
-      console.log("NOTICE: Supabase is unavailable. Using in-memory storage for relational data.");
-      console.log("AstraDB will be used for vector search.");
-    } else if (!astradbConnected) {
-      console.log("NOTICE: AstraDB is unavailable. Using in-memory storage for vector search.");
-      console.log("Supabase will be used for relational data.");
+    if (supabaseConnected && astradbConnected) {
+      console.log("✅ NOTICE: All external databases are connected and working properly.");
     } else {
-      console.log("NOTICE: All external databases are connected and working properly.");
+      console.warn("⚠️ WARNING: One or more database connections failed.");
+      if (!supabaseConnected) {
+        console.warn("  - Supabase connection failed: Data storage and retrieval will not work properly.");
+      }
+      if (!astradbConnected) {
+        console.warn("  - AstraDB/DataStax connection failed: Semantic search will not work properly.");
+      }
+      console.warn("Please check your database credentials and connection settings.");
     }
     
-    // Load sample data from files
-    try {
-      const loadCount = await this.loadPubChemData(20);
-      console.log(`Loaded ${loadCount} PubChem compounds during initialization`);
-    } catch (error) {
-      console.error("Error loading PubChem data:", error instanceof Error ? error.message : String(error));
-      console.log("Continuing initialization without loading compound data");
+    // Load sample data from files if databases are connected
+    if (supabaseConnected && astradbConnected) {
+      try {
+        const loadCount = await this.loadPubChemData(20);
+        console.log(`Loaded ${loadCount} PubChem compounds during initialization`);
+      } catch (error) {
+        console.error("Error loading PubChem data:", error instanceof Error ? error.message : String(error));
+        console.warn("⚠️ Could not load initial compound data, but continuing application startup.");
+      }
+    } else {
+      console.log("Skipping initial data loading due to database connection issues.");
     }
     
     this.dataInitialized = true;
@@ -395,23 +349,11 @@ export class MemStorage implements IStorage {
                 // Add to memory storage
                 const createdCompound = await this.createCompound(compound);
                 
-                // Add to Supabase relational database
-                try {
-                  await supabaseClient.addCompound(compound);
-                } catch (dbError) {
-                  console.error(`Error adding compound ${compound.cid} to Supabase:`, 
-                    dbError instanceof Error ? dbError.message : String(dbError));
-                  // Continue with in-memory storage even if Supabase fails
-                }
+                // Add to Supabase relational database - no fallback to in-memory
+                await supabaseClient.addCompound(compound);
                 
-                // Add to AstraDB vector database  
-                try {
-                  await astraDbClient.addCompound(createdCompound);
-                } catch (dbError) {
-                  console.error(`Error adding compound ${compound.cid} to AstraDB:`, 
-                    dbError instanceof Error ? dbError.message : String(dbError));
-                  // Continue with in-memory storage even if AstraDB fails
-                }
+                // Add to AstraDB vector database - no fallback to in-memory
+                await astraDbClient.addCompound(createdCompound);
                 
                 // Mark as processed
                 createdCompound.isProcessed = true;
