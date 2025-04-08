@@ -10,15 +10,51 @@ let supabase: SupabaseClient | null = null;
  * Gets the Supabase client, initializing it if needed
  */
 export function getClient(): SupabaseClient {
-  if (!supabase) {
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      throw new Error("Missing Supabase URL or API key");
+  try {
+    if (!supabase) {
+      if (!SUPABASE_URL || !SUPABASE_KEY) {
+        throw new Error("Missing Supabase URL or API key");
+      }
+      
+      console.log(`Initializing Supabase client with URL: ${SUPABASE_URL.substring(0, 20)}...`);
+      
+      // Create the Supabase client with options to handle connection issues
+      supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+        global: {
+          // Increase timeouts for potentially slow or unreliable connections
+          fetch: (url, options) => {
+            const timeout = 15000; // 15 seconds timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            return fetch(url, {
+              ...options,
+              signal: controller.signal,
+            }).then(response => {
+              clearTimeout(timeoutId);
+              return response;
+            }).catch(error => {
+              clearTimeout(timeoutId);
+              if (error.name === 'AbortError') {
+                throw new Error(`Request to Supabase timed out after ${timeout}ms`);
+              }
+              throw error;
+            });
+          }
+        }
+      });
+      
+      console.log("Connected to Supabase client successfully (connection not verified yet)");
     }
-    
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("Connected to Supabase successfully");
+    return supabase;
+  } catch (error) {
+    console.error("Error creating Supabase client:", error);
+    throw new Error(`Failed to create Supabase client: ${error instanceof Error ? error.message : String(error)}`);
   }
-  return supabase;
 }
 
 /**
@@ -28,20 +64,110 @@ export async function initializeDatabase(): Promise<void> {
   try {
     const supabase = getClient();
     
-    // Check if compounds table exists, create it if not
-    const { error } = await supabase.rpc('create_compounds_table_if_not_exists', {});
+    // First check if we can actually connect to Supabase
+    console.log("Testing Supabase connection...");
     
-    if (error) {
-      // If RPC doesn't exist, create the table directly
-      await supabase.from('compounds').select('id').limit(1).maybeSingle();
-      console.log("Compounds table exists or was created successfully");
+    try {
+      const { data, error } = await supabase.from('pg_catalog.pg_tables')
+        .select('schemaname,tablename')
+        .eq('schemaname', 'public')
+        .limit(1);
+        
+      if (error) {
+        console.error("Error testing Supabase connection:", error.message);
+        throw new Error(`Cannot connect to Supabase: ${error.message}`);
+      }
+      
+      console.log("Successfully connected to Supabase");
+    } catch (connError) {
+      console.error("Failed to connect to Supabase:", connError);
+      throw new Error("Cannot connect to Supabase database");
+    }
+    
+    // Now let's check if compounds table exists
+    console.log("Checking if compounds table exists...");
+    const { data: tableExists, error: tableCheckError } = await supabase
+      .from('pg_catalog.pg_tables')
+      .select('tablename')
+      .eq('schemaname', 'public')
+      .eq('tablename', 'compounds')
+      .maybeSingle();
+      
+    if (tableCheckError) {
+      console.error("Error checking if compounds table exists:", tableCheckError.message);
+      throw new Error(`Failed to check if compounds table exists: ${tableCheckError.message}`);
+    }
+    
+    // If table doesn't exist, create it using our schema
+    if (!tableExists) {
+      console.log("Compounds table doesn't exist, creating it...");
+      
+      // SQL to create the compounds table based on our schema
+      const createTableSQL = `
+        CREATE TABLE IF NOT EXISTS public.compounds (
+          id SERIAL PRIMARY KEY,
+          cid INTEGER NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          iupac_name TEXT,
+          formula TEXT,
+          molecular_weight REAL,
+          synonyms TEXT[],
+          description TEXT,
+          chemical_class TEXT[],
+          inchi TEXT,
+          inchi_key TEXT,
+          smiles TEXT,
+          properties JSONB,
+          is_processed BOOLEAN DEFAULT FALSE,
+          image_url TEXT
+        );
+        
+        -- Create index on CID for fast lookups
+        CREATE INDEX IF NOT EXISTS idx_compounds_cid ON public.compounds(cid);
+        
+        -- Create index for text search on name/formula/description
+        CREATE INDEX IF NOT EXISTS idx_compounds_name ON public.compounds(name);
+        CREATE INDEX IF NOT EXISTS idx_compounds_formula ON public.compounds(formula);
+      `;
+      
+      // Execute the SQL query using rpc
+      const { error: createError } = await supabase.rpc('exec_sql', { sql: createTableSQL });
+      
+      // If rpc method doesn't exist, we'll try to handle this more gracefully
+      if (createError) {
+        console.error("Error creating compounds table via rpc:", createError.message);
+        console.log("Attempting to create table through another method...");
+        
+        // We'll try to use REST SQL API - this is a bit of a workaround but should work
+        try {
+          // Try using the compounds table in a SELECT to see if it already exists
+          const { error: selectError } = await supabase
+            .from('compounds')
+            .select('id')
+            .limit(1);
+            
+          if (selectError && selectError.code === '42P01') { // Table doesn't exist
+            console.error("Compounds table doesn't exist but cannot create it directly in Supabase REST API");
+            console.log("Please create the table manually in the Supabase dashboard or use migrations");
+            throw new Error("Cannot create compounds table automatically");
+          } else {
+            console.log("Compounds table seems to exist despite earlier check");
+          }
+        } catch (altError) {
+          console.error("Error with alternative table creation method:", altError);
+          throw new Error("Failed to create compounds table");
+        }
+      } else {
+        console.log("Successfully created compounds table");
+      }
+    } else {
+      console.log("Compounds table already exists");
     }
     
     console.log("Supabase database initialized successfully");
   } catch (error) {
     console.error("Error initializing Supabase database:", error);
-    // Instead of throwing, we'll log and continue
-    console.log("Continuing without Supabase table creation - it may already exist");
+    throw new Error(`Supabase initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

@@ -21,6 +21,49 @@ async function getClient(): Promise<any> {
   if (!astraClient) {
     console.log("Initializing AstraDB client...");
     try {
+      // Check required environment variables
+      if (!ASTRA_DB_TOKEN) {
+        console.error("Missing ASTRA_DB_TOKEN environment variable");
+        return null;
+      }
+      
+      if (!ASTRA_DB_ID) {
+        console.error("Missing ASTRA_DB_ID environment variable");
+        return null;
+      }
+      
+      if (!ASTRA_DB_REGION) {
+        console.error("Missing ASTRA_DB_REGION environment variable");
+        return null;
+      }
+      
+      // Test network connectivity to the DataStax API endpoint first
+      const testEndpoint = `https://${ASTRA_DB_ID}-${ASTRA_DB_REGION}.apps.astra.datastax.com`;
+      console.log(`Testing network connectivity to DataStax at ${testEndpoint}...`);
+      
+      try {
+        // We use a timeout to avoid waiting too long for DNS resolution
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(testEndpoint, { 
+          method: 'HEAD',
+          signal: controller.signal
+        }).catch(error => {
+          console.error("Network error during connectivity test:", error);
+          throw new Error(`Network connection failed: ${error.message}`);
+        });
+        
+        clearTimeout(timeoutId);
+        
+        console.log(`Network connectivity test status: ${response.status} (even a 404 is OK as it means the host was reached)`);
+      } catch (networkError) {
+        console.error("Network connectivity test to DataStax failed:", 
+          networkError instanceof Error ? networkError.message : String(networkError));
+        console.log("This is likely a DNS resolution issue or connectivity problem");
+        return null;
+      }
+      
       // Standard approach to connect to AstraDB/DataStax
       try {
         console.log("Connecting to DataStax using standard approach...");
@@ -32,7 +75,7 @@ async function getClient(): Promise<any> {
           applicationToken: ASTRA_DB_TOKEN
         });
         
-        console.log("Connected to DataStax successfully");
+        console.log("Connected to DataStax client successfully");
       } catch (error) {
         console.error("Error connecting to DataStax:", error);
         
@@ -53,20 +96,48 @@ async function getClient(): Promise<any> {
       // Only try to create collection if client was initialized
       if (astraClient) {
         try {
+          console.log(`Creating collection namespace ${ASTRA_DB_KEYSPACE}.${ASTRA_DB_COLLECTION}...`);
           compoundsCollection = astraClient.namespace(ASTRA_DB_KEYSPACE).collection(ASTRA_DB_COLLECTION);
+          
+          // Try a basic operation to verify connection works
+          try {
+            console.log("Testing DataStax collection with a simple operation...");
+            const testDocId = "connection-test";
+            const testDoc = { id: testDocId, test: true, timestamp: new Date().toISOString() };
+            
+            // Try to update (creates if doesn't exist)
+            await compoundsCollection.update(testDocId, testDoc);
+            console.log("DataStax collection test successful");
+          } catch (opError) {
+            console.error("Error testing collection operation:", 
+              opError instanceof Error ? opError.message : String(opError));
+            console.log("Collection exists but operations may not work");
+          }
+          
           console.log("Connected to AstraDB collection successfully");
         } catch (collectionError) {
-          console.error("Error accessing collection:", collectionError);
+          console.error("Error accessing collection:", 
+            collectionError instanceof Error ? collectionError.message : String(collectionError));
+          
           // Return null to indicate we should fall back to in-memory
+          astraClient = null;
+          compoundsCollection = null;
           return null;
         }
       }
     } catch (error) {
-      console.error("Error in overall AstraDB connection process:", error);
+      console.error("Error in overall AstraDB connection process:", 
+        error instanceof Error ? error.message : String(error));
+      
+      // Reset variables to ensure clean state
+      astraClient = null;
+      compoundsCollection = null;
+      
       // Return null to indicate we should fall back to in-memory
       return null;
     }
   }
+  
   return astraClient;
 }
 

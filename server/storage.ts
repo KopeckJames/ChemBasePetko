@@ -277,34 +277,55 @@ export class MemStorage implements IStorage {
   }
 
   async initializeDatabase(): Promise<void> {
+    // Track external database connection status
+    let supabaseConnected = false;
+    let astradbConnected = false;
+    
+    console.log("Initializing database...");
+    
+    // Initialize external database connections
     try {
-      console.log("Initializing database...");
-      
-      // Initialize external database connections
-      try {
-        await supabaseClient.initializeDatabase();
-      } catch (error) {
-        console.error("Error initializing Supabase:", error);
-        console.log("Continuing with in-memory storage only");
-      }
-      
-      try {
-        await astraDbClient.initializeSchema();
-      } catch (error) {
-        console.error("Error initializing AstraDB:", error);
-        console.log("Continuing with in-memory storage only");
-      }
-      
-      // Load sample data from files
+      await supabaseClient.initializeDatabase();
+      supabaseConnected = true;
+      console.log("Supabase database initialized successfully");
+    } catch (error) {
+      console.error("Error initializing Supabase:", error instanceof Error ? error.message : String(error));
+      console.log("Will continue with in-memory storage for relational data");
+    }
+    
+    try {
+      await astraDbClient.initializeSchema();
+      astradbConnected = true;
+      console.log("AstraDB database initialized successfully");
+    } catch (error) {
+      console.error("Error initializing AstraDB:", error instanceof Error ? error.message : String(error));
+      console.log("Will continue with in-memory storage for vector search");
+    }
+    
+    if (!supabaseConnected && !astradbConnected) {
+      console.log("NOTICE: Both external databases are unavailable. Using in-memory storage only.");
+      console.log("Some functionality may be limited, but the application will continue to work.");
+    } else if (!supabaseConnected) {
+      console.log("NOTICE: Supabase is unavailable. Using in-memory storage for relational data.");
+      console.log("AstraDB will be used for vector search.");
+    } else if (!astradbConnected) {
+      console.log("NOTICE: AstraDB is unavailable. Using in-memory storage for vector search.");
+      console.log("Supabase will be used for relational data.");
+    } else {
+      console.log("NOTICE: All external databases are connected and working properly.");
+    }
+    
+    // Load sample data from files
+    try {
       const loadCount = await this.loadPubChemData(20);
       console.log(`Loaded ${loadCount} PubChem compounds during initialization`);
-      
-      this.dataInitialized = true;
-      console.log("Database initialization complete");
     } catch (error) {
-      console.error("Error initializing database:", error);
-      throw error;
+      console.error("Error loading PubChem data:", error instanceof Error ? error.message : String(error));
+      console.log("Continuing initialization without loading compound data");
     }
+    
+    this.dataInitialized = true;
+    console.log("Database initialization complete");
   }
 
   async loadPubChemData(limit: number = 1000): Promise<number> {
