@@ -223,10 +223,21 @@ export async function createTablesIfNotExist(): Promise<void> {
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    // Try to get system information which should always be available
-    const { data, error } = await supabase.rpc('version');
-    if (error) throw error;
-    console.log(`Connected to Supabase. PostgreSQL version: ${data}`);
+    // Just check if we can access the database by querying the system tables
+    // This is a simple query that should work even if no tables exist yet
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .limit(1);
+    
+    // Even if no users exist, we should not get a connection error
+    if (error && error.code !== 'PGRST104' && error.code !== 'PGRST116') {
+      // PGRST104 means relation doesn't exist, which is fine - we'll create it
+      // PGRST116 means no rows returned, which is also fine
+      throw error;
+    }
+    
+    console.log('Connected to Supabase database successfully');
     return true;
   } catch (error) {
     console.error('Supabase connection test failed:', error);

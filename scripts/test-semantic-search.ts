@@ -116,10 +116,5 @@ async function main() {
   }
 }
 
-// Execute if run directly
-if (require.main === module) {
-  main();
-}
-
-// Export for use in other modules
-export { testSemanticSearch };
+// Execute the script
+main();

@@ -7,8 +7,8 @@ const COMPOUND_CLASS = "Compound";
 
 // Env variables for configuration
 const WEAVIATE_URL = process.env.WEAVIATE_URL || "ddssrlksrhlnehtppyxjq.c0.us-west3.gcp.weaviate.cloud";
-const WEAVIATE_API_KEY = process.env.WEAVIATE_API_KEY || "IMlD52U4kkABRrXDPGZO7z2hKkF8d1vGsY9H";
-const WEAVIATE_SCHEME = process.env.WEAVIATE_SCHEME || "https";
+const WEAVIATE_API_KEY = process.env.WEAVIATE_API_KEY || "";
+const WEAVIATE_SCHEME = "https"; // Default scheme
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Configure OpenAI client if API key is available
@@ -27,11 +27,22 @@ let client: WeaviateClient;
  */
 async function getClient(): Promise<WeaviateClient> {
   if (!client) {
-    console.log(`Connecting to Weaviate at ${WEAVIATE_SCHEME}://${WEAVIATE_URL}`);
+    // Check if URL already includes the scheme
+    let host = WEAVIATE_URL;
+    let scheme = WEAVIATE_SCHEME;
+    
+    if (host.startsWith('http://') || host.startsWith('https://')) {
+      // Extract scheme and host from the URL
+      const url = new URL(host);
+      scheme = url.protocol.replace(':', '');
+      host = url.host;
+    }
+    
+    console.log(`Connecting to Weaviate at ${scheme}://${host}`);
     
     const config: any = {
-      scheme: WEAVIATE_SCHEME,
-      host: WEAVIATE_URL,
+      scheme: scheme,
+      host: host,
     };
     
     // Add API key if available

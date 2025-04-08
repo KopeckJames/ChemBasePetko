@@ -1,0 +1,22 @@
+{
+  "cid": 123,
+  "name": "Test Compound",
+  "iupacName": "Test IUPAC Name",
+  "formula": "C6H12O6",
+  "molecularWeight": 180.16,
+  "synonyms": [
+    "Test",
+    "Sample"
+  ],
+  "description": "Test description",
+  "chemicalClass": [
+    "Test Class"
+  ],
+  "inchi": "Test InChI",
+  "inchiKey": "Test InChI Key",
+  "smiles": "Test SMILES",
+  "imageUrl": "https://example.com/image.png",
+  "properties": {
+    "test": true
+  }
+}

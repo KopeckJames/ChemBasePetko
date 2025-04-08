@@ -286,20 +286,23 @@ function validateCompound(data: any): InsertCompound {
     data.name = `Compound ${data.cid}`;
   }
   
+  // Our schema uses camelCase for JavaScript properties but maps to snake_case in the database
+  // We need to convert any snake_case input keys to camelCase for our schema
+  
   // Ensure all fields have the correct type
   return {
     cid: Number(data.cid),
     name: String(data.name),
-    iupacName: data.iupacName ? String(data.iupacName) : undefined,
+    iupacName: data.iupacName ? String(data.iupacName) : (data.iupac_name ? String(data.iupac_name) : undefined),
     formula: data.formula ? String(data.formula) : undefined,
-    molecularWeight: data.molecularWeight ? Number(data.molecularWeight) : undefined,
+    molecularWeight: data.molecularWeight ? Number(data.molecularWeight) : (data.molecular_weight ? Number(data.molecular_weight) : undefined),
     synonyms: Array.isArray(data.synonyms) ? data.synonyms.map(String) : undefined,
     description: data.description ? String(data.description) : undefined,
-    chemicalClass: Array.isArray(data.chemicalClass) ? data.chemicalClass.map(String) : undefined,
+    chemicalClass: Array.isArray(data.chemicalClass) ? data.chemicalClass.map(String) : (Array.isArray(data.chemical_class) ? data.chemical_class.map(String) : undefined),
     inchi: data.inchi ? String(data.inchi) : undefined,
-    inchiKey: data.inchiKey ? String(data.inchiKey) : undefined,
+    inchiKey: data.inchiKey ? String(data.inchiKey) : (data.inchi_key ? String(data.inchi_key) : undefined),
     smiles: data.smiles ? String(data.smiles) : undefined,
-    imageUrl: data.imageUrl ? String(data.imageUrl) : `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${data.cid}&width=300&height=300`,
+    imageUrl: data.imageUrl ? String(data.imageUrl) : (data.image_url ? String(data.image_url) : `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${data.cid}&width=300&height=300`),
     properties: data.properties || {},
   };
 }

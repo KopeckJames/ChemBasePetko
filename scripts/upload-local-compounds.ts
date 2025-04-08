@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 import weaviate, { WeaviateClient } from 'weaviate-ts-client';
 import { parse } from 'node:path';
 import { Compound, InsertCompound } from '../shared/schema';
-import { processCompoundData } from '../server/db/processData';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -143,60 +142,37 @@ async function ensureWeaviateSchema(): Promise<void> {
 // Ensure Supabase tables exist
 async function ensureSupabaseTables(): Promise<void> {
   // Check if compounds table exists
-  const { data: tables, error } = await supabase
-    .from('pg_tables')
-    .select('tablename')
-    .eq('schemaname', 'public');
-  
-  if (error) {
-    console.error('Error checking tables:', error);
-    throw error;
-  }
-  
-  const tableNames = tables?.map(t => t.tablename) || [];
-  
-  if (!tableNames.includes('compounds')) {
-    console.log('Creating compounds table...');
+  try {
+    const { error } = await supabase
+      .from('compounds')
+      .select('id')
+      .limit(1);
     
-    // Create compounds table
-    const { error: createError } = await supabase.rpc('create_compounds_table');
-    
-    if (createError) {
-      // If RPC fails, try direct SQL
-      const { error: sqlError } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.compounds (
-          id SERIAL PRIMARY KEY,
-          cid INTEGER NOT NULL UNIQUE,
-          name TEXT NOT NULL,
-          iupac_name TEXT,
-          formula TEXT,
-          molecular_weight REAL,
-          synonyms TEXT[],
-          description TEXT,
-          chemical_class TEXT[],
-          inchi TEXT,
-          inchi_key TEXT,
-          smiles TEXT,
-          properties JSONB,
-          is_processed BOOLEAN DEFAULT FALSE,
-          image_url TEXT
-        );
-        
-        CREATE INDEX IF NOT EXISTS compounds_cid_idx ON public.compounds (cid);
-        CREATE INDEX IF NOT EXISTS compounds_name_idx ON public.compounds (name);
-        CREATE INDEX IF NOT EXISTS compounds_molecular_weight_idx ON public.compounds (molecular_weight);
-        CREATE INDEX IF NOT EXISTS compounds_chemical_class_idx ON public.compounds USING GIN (chemical_class);
-      `);
+    if (error && error.code === 'PGRST104') {
+      // Table doesn't exist
+      console.log('Creating compounds table...');
+      
+      // Create the table using execute SQL
+      const { error: sqlError } = await supabase.rpc('create_compounds_table', {});
       
       if (sqlError) {
-        console.error('Error creating compounds table:', sqlError);
-        throw sqlError;
+        console.error('Could not create table using RPC, trying direct SQL');
+        // Using direct SQL doesn't directly work with Supabase JavaScript client
+        // We'll need to use REST API instead
+        console.log('Please create the table manually using the SQL script: scripts/supabase-setup.sql');
+        
+        throw new Error('Could not create compounds table');
       }
+    } else {
+      console.log('Compounds table already exists');
     }
+  } catch (error) {
+    console.error('Error checking compounds table:', error);
+    console.log('Creating compounds table...');
     
-    console.log('Compounds table created successfully');
-  } else {
-    console.log('Compounds table already exists');
+    // Use the SQL script provided
+    console.log('Please run the SQL script in scripts/supabase-setup.sql to create the tables manually');
+    throw new Error('Could not create database tables. Use the SQL script instead.');
   }
 }
 
@@ -214,10 +190,27 @@ async function insertCompoundToSupabase(compound: InsertCompound): Promise<boole
     return false;
   }
   
+  // Convert from camelCase to snake_case for database insertion
+  const dbCompound = {
+    cid: compound.cid,
+    name: compound.name,
+    iupac_name: compound.iupacName,
+    formula: compound.formula,
+    molecular_weight: compound.molecularWeight,
+    synonyms: compound.synonyms,
+    description: compound.description,
+    chemical_class: compound.chemicalClass,
+    inchi: compound.inchi,
+    inchi_key: compound.inchiKey,
+    smiles: compound.smiles,
+    image_url: compound.imageUrl,
+    properties: compound.properties
+  };
+  
   // Insert compound
   const { data, error } = await supabase
     .from('compounds')
-    .insert([compound])
+    .insert([dbCompound])
     .select()
     .single();
   
@@ -239,6 +232,7 @@ async function insertCompoundToWeaviate(compound: Compound): Promise<boolean> {
     const existingResult = await client.graphql
       .get()
       .withClassName('Compound')
+      .withFields('cid')
       .withWhere({
         path: ['cid'],
         operator: 'Equal',
@@ -256,16 +250,16 @@ async function insertCompoundToWeaviate(compound: Compound): Promise<boolean> {
     const weaviateCompound = {
       cid: compound.cid,
       name: compound.name,
-      iupacName: compound.iupac_name,
+      iupacName: compound.iupacName,
       formula: compound.formula,
-      molecularWeight: compound.molecular_weight,
+      molecularWeight: compound.molecularWeight,
       synonyms: compound.synonyms,
       description: compound.description,
-      chemicalClass: compound.chemical_class,
+      chemicalClass: compound.chemicalClass,
       inchi: compound.inchi,
-      inchiKey: compound.inchi_key,
+      inchiKey: compound.inchiKey,
       smiles: compound.smiles,
-      imageUrl: compound.image_url || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${compound.cid}&width=300&height=300`
+      imageUrl: compound.imageUrl || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${compound.cid}&width=300&height=300`
     };
     
     // Add to Weaviate
@@ -292,8 +286,56 @@ async function processCompoundFile(filePath: string): Promise<boolean> {
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const compoundData = JSON.parse(fileContent);
     
-    // Process the compound data
-    const processedCompound = await processCompoundData(compoundData);
+    // Process PubChem format if present
+    let processedCompound: InsertCompound;
+    
+    // If it's in PC_Compounds format (from our examples)
+    if (compoundData.PC_Compounds && compoundData.PC_Compounds_extras) {
+      const extras = compoundData.PC_Compounds_extras;
+      
+      processedCompound = {
+        cid: Number(extras.CID),
+        name: extras.name,
+        iupacName: extras.iupac_name,
+        formula: extras.molecular_formula,
+        molecularWeight: extras.molecular_weight,
+        synonyms: extras.synonyms || [],
+        description: extras.description,
+        chemicalClass: extras.chemical_class || [],
+        inchi: compoundData.PC_Compounds[0]?.props?.find((p: any) => p.urn?.label === 'InChI')?.value?.sval,
+        inchiKey: compoundData.PC_Compounds[0]?.props?.find((p: any) => p.urn?.label === 'InChIKey')?.value?.sval,
+        smiles: extras.canonical_smiles,
+        imageUrl: `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${extras.CID}&width=300&height=300`,
+        properties: {
+          complexity: extras.complexity,
+          xlogp: extras.xlogp,
+          hydrogen_bond_donor_count: extras.hydrogen_bond_donor_count,
+          hydrogen_bond_acceptor_count: extras.hydrogen_bond_acceptor_count,
+          rotatable_bond_count: extras.rotatable_bond_count,
+          topological_polar_surface_area: extras.topological_polar_surface_area,
+          exact_mass: extras.exact_mass,
+          monoisotopic_mass: extras.monoisotopic_mass,
+          charge: extras.charge
+        },
+      };
+    } else {
+      // Direct format
+      processedCompound = {
+        cid: Number(compoundData.cid),
+        name: compoundData.name,
+        iupacName: compoundData.iupacName || compoundData.iupac_name,
+        formula: compoundData.formula,
+        molecularWeight: compoundData.molecularWeight || compoundData.molecular_weight,
+        synonyms: compoundData.synonyms || [],
+        description: compoundData.description,
+        chemicalClass: compoundData.chemicalClass || compoundData.chemical_class || [],
+        inchi: compoundData.inchi,
+        inchiKey: compoundData.inchiKey || compoundData.inchi_key,
+        smiles: compoundData.smiles,
+        imageUrl: compoundData.imageUrl || compoundData.image_url || `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${compoundData.cid}&width=300&height=300`,
+        properties: compoundData.properties || {},
+      };
+    }
     
     // Insert into Supabase
     const supabaseResult = await insertCompoundToSupabase(processedCompound);
@@ -307,7 +349,27 @@ async function processCompoundFile(filePath: string): Promise<boolean> {
         .single();
       
       if (compound) {
-        await insertCompoundToWeaviate(compound);
+        // Convert snake_case from Supabase to camelCase for Weaviate
+        // Creating a properly typed object to pass to Weaviate
+        const weaviateCompound: Compound = {
+          id: compound.id,
+          cid: compound.cid,
+          name: compound.name,
+          iupacName: compound.iupac_name,
+          formula: compound.formula,
+          molecularWeight: compound.molecular_weight,
+          synonyms: compound.synonyms || [],
+          description: compound.description,
+          chemicalClass: compound.chemical_class || [],
+          inchi: compound.inchi,
+          inchiKey: compound.inchi_key,
+          smiles: compound.smiles,
+          imageUrl: compound.image_url,
+          properties: compound.properties || {},
+          isProcessed: compound.is_processed
+        };
+        
+        await insertCompoundToWeaviate(weaviateCompound);
       }
     }
     
@@ -334,13 +396,30 @@ async function processBatch(filePaths: string[]): Promise<void> {
 // Main function
 async function main() {
   const args = process.argv.slice(2);
+  let inputPath = '';
   
-  if (args.length < 1) {
-    console.error('Usage: npm run upload-local-compounds <directory_or_file_path>');
-    process.exit(1);
+  // Parse command line arguments
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--directory' || args[i] === '-d') {
+      if (i + 1 < args.length) {
+        inputPath = args[i + 1];
+        i++; // Skip the next argument since we used it
+      }
+    } else if (args[i] === '--file' || args[i] === '-f') {
+      if (i + 1 < args.length) {
+        inputPath = args[i + 1];
+        i++; // Skip the next argument since we used it
+      }
+    } else if (!inputPath && !args[i].startsWith('-')) {
+      // If we haven't set inputPath yet and this isn't a flag, use it as the input path
+      inputPath = args[i];
+    }
   }
   
-  const inputPath = args[0];
+  if (!inputPath) {
+    console.error('Usage: npx tsx scripts/upload-local-compounds.ts [--directory/-d path] [--file/-f path]');
+    process.exit(1);
+  }
   
   // Check if environment variables are set
   if (!supabaseUrl || !supabaseKey) {

@@ -1,86 +1,124 @@
-# Database Setup Guide for ChemSearch
+# Database Setup Guide
 
-This document provides instructions for setting up the databases required for ChemSearch.
+## Overview
 
-## Database Requirements
+This project uses two databases to store and query chemical compound data:
 
-ChemSearch uses two databases:
-1. **Supabase** - For relational data storage
-2. **Weaviate** - For vector search capabilities
+1. **Supabase PostgreSQL** - Relational database for storing structured compound data
+2. **Weaviate Vector Database** - Vector database for semantic search capabilities
 
-## Environment Configuration
+This guide will help you set up both databases correctly.
 
-Create a `.env` file in the root directory with the following variables:
+## Prerequisites
+
+1. A Supabase account and project
+2. A Weaviate instance (cloud or self-hosted)
+3. Environment variables set up in `.env`
+
+## Environment Variables
+
+Create an `.env` file in the root directory with the following variables:
 
 ```
+# Supabase credentials
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
+
+# Weaviate credentials
 WEAVIATE_URL=your_weaviate_url
-WEAVIATE_API_KEY=your_weaviate_api_key
 WEAVIATE_SCHEME=https
-OPENAI_API_KEY=your_openai_api_key (optional, for better vector search)
+WEAVIATE_API_KEY=your_weaviate_api_key
+
+# Optional: For text2vec-openai vectorizer
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ## Supabase Setup
 
-1. Create an account on [Supabase](https://supabase.com) if you don't have one
-2. Create a new project and note the URL and API key
-3. Set up the database tables using the SQL script:
-   
-   Either:
-   - Copy and run the SQL from `scripts/supabase-setup.sql` in the Supabase SQL Editor
-   - Or run the script directly using the Supabase CLI if you have it installed
+### Option 1: Run the SQL Script
 
-   This script creates:
-   - The `users` and `compounds` tables
-   - Required indexes for performance
-   - A utility function for connection testing
-   - Row-level security policies
+The easiest way to set up your Supabase database is to run the SQL script in the SQL editor of your Supabase dashboard:
+
+```sql
+-- Create the compounds table if it doesn't exist
+CREATE TABLE IF NOT EXISTS compounds (
+  id SERIAL PRIMARY KEY,
+  cid INTEGER NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  iupac_name TEXT,
+  formula TEXT,
+  molecular_weight REAL,
+  synonyms TEXT[],
+  description TEXT,
+  chemical_class TEXT[],
+  inchi TEXT,
+  inchi_key TEXT,
+  smiles TEXT,
+  properties JSONB DEFAULT '{}'::jsonb,
+  is_processed BOOLEAN DEFAULT FALSE,
+  image_url TEXT
+);
+
+-- Create indexes for efficient searching
+CREATE INDEX IF NOT EXISTS idx_compounds_cid ON compounds(cid);
+CREATE INDEX IF NOT EXISTS idx_compounds_name ON compounds(name);
+CREATE INDEX IF NOT EXISTS idx_compounds_formula ON compounds(formula);
+CREATE INDEX IF NOT EXISTS idx_compounds_smiles ON compounds(smiles);
+
+-- Create the users table (kept for compatibility)
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL
+);
+```
+
+### Option 2: Run the Database Initialization Script
+
+Alternatively, you can run the database initialization script:
+
+```bash
+npx tsx scripts/test-database-connections.ts
+```
+
+This will test the connections to both databases and verify that they're properly set up.
 
 ## Weaviate Setup
 
-1. Create an account on [Weaviate Cloud Services](https://console.weaviate.cloud/) if you don't have one
-2. Create a new cluster (the free tier is sufficient for testing)
-3. Note the URL and API key for your cluster
-4. The application will automatically create the schema on startup
+Weaviate will be initialized automatically when you run the upload scripts or the application. The schema includes:
 
-## Data Loading
+- Class: `Compound`
+- Properties: All compound data fields
+- Vectorizer: `text2vec-openai` (requires OpenAI API key)
 
-To load chemical compound data into your databases:
+## Understanding Column Names
 
-1. Prepare your compound data in JSON format (see examples in the `examples` directory)
-2. Use the provided upload script:
-   ```
-   ./scripts/upload-compounds.sh path/to/your/data
-   ```
+There's an important aspect to understand about our column names:
 
-For more detailed instructions on data uploading, see the [UPLOAD_GUIDE.md](UPLOAD_GUIDE.md) file.
+- In the PostgreSQL database, columns use `snake_case` naming (e.g., `iupac_name`, `chemical_class`)
+- In our TypeScript code, we use `camelCase` properties (e.g., `iupacName`, `chemicalClass`)
 
-## Example Data
-
-The `examples` directory contains sample compound data you can use to test the system:
-
-```
-./scripts/upload-compounds.sh --test
-```
-
-This will upload the example compounds (aspirin, caffeine, etc.) to your database.
-
-## Testing Your Setup
-
-To verify that your database setup is working correctly:
-
-1. Start the application using the "Start application" workflow
-2. Open the application in your browser
-3. Try searching for compounds using keywords like "aspirin" or "caffeine"
-4. If you've set up OpenAI integration, try semantic searches like "pain reliever" or "stimulant"
+This conversion happens automatically through our Drizzle ORM setup. The schema in `shared/schema.ts` defines this mapping.
 
 ## Troubleshooting
 
-If you encounter issues:
+### Common Errors
 
-1. Check your environment variables and database credentials
-2. Ensure your databases are accessible from your development environment
-3. Look for any error messages in the application logs
-4. Try running the SQL script again to ensure all database objects are created properly
-5. Make sure the version() function exists in your Supabase database (this is used for connection testing)
+1. **Column not found errors:**
+   If you see errors like "Could not find the 'chemicalClass' column", it means your database schema doesn't match what our code expects. Make sure to run the SQL script above to create all required columns.
+
+2. **Connection errors:**
+   Double-check your environment variables to ensure they have the correct credentials.
+
+3. **Authentication errors:**
+   Make sure your Supabase and Weaviate API keys have the correct permissions.
+
+### Testing Connections
+
+You can verify your database connections at any time:
+
+```bash
+npx tsx scripts/test-database-connections.ts
+```
+
+For more detailed troubleshooting, check the console logs during application startup.
