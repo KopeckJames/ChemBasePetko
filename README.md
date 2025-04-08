@@ -4,37 +4,46 @@ A chemical compound vector database leveraging Weaviate for advanced natural lan
 
 ## Project Overview
 
-ChemBasePetko enables semantic search of chemical compounds from the PubChem database, allowing users to find compounds based on natural language descriptions, chemical properties, and structural similarities.
+ChemBasePetko is a comprehensive platform for searching and exploring chemical compounds from the PubChem database. It utilizes vector embeddings and semantic search capabilities to enable natural language queries about chemical properties, structures, and uses.
 
-## Key Features
+### Key Features
 
-- **Vector Search**: Semantic search capabilities using Weaviate vector database
-- **PubChem Integration**: Automated downloading and processing of compound data from PubChem
-- **Natural Language Queries**: Find compounds using plain language descriptions
-- **Scalable Architecture**: Designed to handle 144,000+ compounds with batch processing
-- **React Frontend**: Modern, responsive user interface for intuitive data exploration
+- **Semantic Search**: Natural language queries powered by Weaviate vector database
+- **PubChem Integration**: Data sourced directly from the PubChem API
+- **React Frontend**: Intuitive user interface for exploring compound data
+- **Scalable Architecture**: Handles large datasets with batch processing
+- **Progress Tracking**: Comprehensive download and processing progress monitoring
 
 ## Technical Stack
 
-- **Frontend**: React, TailwindCSS, shadcn/ui
+- **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI
 - **Backend**: Node.js, Express
-- **Database**: Weaviate vector database
-- **API Integration**: PubChem REST API
-
-## Getting Started
-
-1. Clone this repository
-2. Install dependencies with `npm install`
-3. Start the application with `npm run dev`
-4. Access the application at http://localhost:5000
+- **Vector Database**: Weaviate
+- **Data Source**: PubChem API
 
 ## Data Processing
 
 The application includes scripts for:
-- Batch downloading compounds from PubChem
-- Processing and loading compounds into Weaviate
-- Tracking download progress and handling rate limits
+
+1. Downloading compounds from PubChem API with rate limiting
+2. Processing and extracting relevant compound information
+3. Loading data into both standard and vector databases
+4. Monitoring download and processing progress
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Start the development server with `npm run dev`
+4. Access the application at http://localhost:5000
+
+## Scripts
+
+- `batch-download-compounds.ts`: Download compounds in batches
+- `load-compounds.ts`: Load downloaded compounds into databases
+- `check-progress.ts`: Monitor download progress
+- `test-semantic-search.ts`: Test semantic search functionality
 
 ## License
 
-MIT
+[MIT License](LICENSE)
