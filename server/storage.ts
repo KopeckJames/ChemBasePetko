@@ -1,5 +1,6 @@
 import { users, type User, type InsertUser, type Compound, type InsertCompound, type SearchQuery, type CompoundSearchResult, type SearchResponse } from "@shared/schema";
-import * as weaviateClient from "./db/weaviate";
+import * as astraDbClient from "./db/astradb";
+import * as supabaseClient from "./db/supabase";
 import { readJSON, processCompoundData } from "./db/processData";
 import path from "path";
 import fs from "fs";
@@ -49,9 +50,12 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    for (const [_, user] of this.users.entries()) {
+      if (user.username === username) {
+        return user;
+      }
+    }
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -73,130 +77,122 @@ export class MemStorage implements IStorage {
 
   async createCompound(insertCompound: InsertCompound): Promise<Compound> {
     const id = this.currentCompoundId++;
-    // Ensure null values for optional fields that might be undefined
+    
     const compound: Compound = { 
       ...insertCompound, 
-      id,
-      isProcessed: false,
-      iupacName: insertCompound.iupacName || null,
-      formula: insertCompound.formula || null,
-      molecularWeight: insertCompound.molecularWeight || null,
-      synonyms: insertCompound.synonyms || null,
-      description: insertCompound.description || null,
-      chemicalClass: insertCompound.chemicalClass || null,
-      inchi: insertCompound.inchi || null,
-      inchiKey: insertCompound.inchiKey || null,
-      smiles: insertCompound.smiles || null,
-      properties: insertCompound.properties || null,
-      imageUrl: insertCompound.imageUrl || null
+      id, 
+      isProcessed: false
     };
     
     this.compounds.set(id, compound);
     this.compoundsByCid.set(compound.cid, compound);
     
+    console.log(`Added compound ${compound.name} (CID: ${compound.cid}) to memory storage`);
+    
     return compound;
   }
 
   async getCompounds(limit: number = 100, offset: number = 0): Promise<Compound[]> {
+    // Convert map values to array
     const compounds = Array.from(this.compounds.values());
+    
+    // Apply pagination
     return compounds.slice(offset, offset + limit);
   }
 
   async searchCompounds(searchQuery: SearchQuery): Promise<SearchResponse> {
-    await this.ensureInitialized();
-    
-    const { query, searchType, molecularWeight, chemicalClass, sort, page, limit } = searchQuery;
-    
-    let results: CompoundSearchResult[] = [];
-    let totalResults = 0;
-    
-    // Get results from Weaviate if it's a semantic search
-    if (searchType === "semantic") {
-      const weaviateResults = await weaviateClient.semanticSearch(query, limit, (page - 1) * limit);
-      results = weaviateResults.results;
-      totalResults = weaviateResults.totalResults;
-    } else {
-      // For keyword search, perform a simple in-memory search
-      const compounds = Array.from(this.compounds.values());
-      const filteredCompounds = compounds.filter(compound => {
-        // Basic keyword match on name, synonyms, description
-        const matchesKeyword = 
-          compound.name.toLowerCase().includes(query.toLowerCase()) ||
-          (compound.description?.toLowerCase().includes(query.toLowerCase())) ||
-          (compound.synonyms?.some(syn => syn.toLowerCase().includes(query.toLowerCase())));
-        
-        // Apply molecular weight filter if specified (ignore "all" value)
-        const matchesMolWeight = !molecularWeight || molecularWeight === "all" || 
-          this.filterByMolecularWeight(compound, molecularWeight);
-        
-        // Apply chemical class filter if specified (ignore "all" value)
-        const matchesChemClass = !chemicalClass || chemicalClass === "all" || 
-          (compound.chemicalClass?.some(cls => cls.toLowerCase().includes(chemicalClass.toLowerCase())));
-        
-        return matchesKeyword && matchesMolWeight && matchesChemClass;
-      });
+    try {
+      // If semantic search is requested and we have connected to AstraDB/Weaviate,
+      // use vector database for search
+      if (searchQuery.searchType === "semantic") {
+        try {
+          return await astraDbClient.semanticSearch(searchQuery);
+        } catch (error) {
+          console.error("Error performing semantic search in vector database:", error);
+          console.log("Falling back to keyword search in memory storage");
+          // Fall back to keyword search
+          searchQuery.searchType = "keyword";
+        }
+      }
       
-      // Apply sorting
+      // For keyword search or as fallback, use local search in memory storage
+      // Convert map values to array
+      const allCompounds = Array.from(this.compounds.values());
+      
+      // Extract search parameters
+      const { query, page = 1, limit = 10, sort = "relevance", molecularWeight, chemicalClass } = searchQuery;
+      const offset = (page - 1) * limit;
+      
+      // Filter compounds by search query
+      let filteredCompounds = allCompounds;
+      
+      if (query && query.trim()) {
+        const searchTerm = query.toLowerCase();
+        filteredCompounds = filteredCompounds.filter(compound => {
+          // Search in name, formula, and description
+          const nameMatch = compound.name?.toLowerCase().includes(searchTerm);
+          const formulaMatch = compound.formula?.toLowerCase().includes(searchTerm);
+          const descriptionMatch = compound.description?.toLowerCase().includes(searchTerm);
+          return nameMatch || formulaMatch || descriptionMatch;
+        });
+      }
+      
+      // Apply molecular weight filter if provided
+      if (molecularWeight && molecularWeight !== "all") {
+        filteredCompounds = filteredCompounds.filter(compound => 
+          this.filterByMolecularWeight(compound, molecularWeight)
+        );
+      }
+      
+      // Apply chemical class filter if provided
+      if (chemicalClass && chemicalClass !== "all") {
+        filteredCompounds = filteredCompounds.filter(compound => 
+          compound.chemicalClass && compound.chemicalClass.includes(chemicalClass)
+        );
+      }
+      
+      // Sort results
       const sortedCompounds = this.sortCompounds(filteredCompounds, sort);
       
       // Apply pagination
-      totalResults = sortedCompounds.length;
-      const paginatedCompounds = sortedCompounds.slice((page - 1) * limit, page * limit);
+      const pagedCompounds = sortedCompounds.slice(offset, offset + limit);
       
       // Convert to CompoundSearchResult format
-      results = paginatedCompounds.map(compound => {
-        // Convert from DB type (null) to API type (undefined)
-        return {
-          cid: compound.cid,
-          name: compound.name,
-          iupacName: compound.iupacName || undefined,
-          formula: compound.formula || undefined,
-          molecularWeight: compound.molecularWeight || undefined,
-          chemicalClass: compound.chemicalClass || undefined,
-          description: compound.description || undefined,
-          imageUrl: compound.imageUrl || this.getDefaultImageUrl(compound.cid),
-          similarity: 0 // No similarity score for keyword search
-        };
-      });
-    }
-    
-    // Apply filters to semantic search results if needed
-    if (searchType === "semantic" && (molecularWeight || chemicalClass)) {
-      results = results.filter(result => {
-        const compound = this.compoundsByCid.get(result.cid);
-        if (!compound) return false;
-        
-        const matchesMolWeight = !molecularWeight || this.filterByMolecularWeight(compound, molecularWeight);
-        const matchesChemClass = !chemicalClass || 
-          (compound.chemicalClass?.some(cls => cls.toLowerCase().includes(chemicalClass.toLowerCase())));
-        
-        return matchesMolWeight && matchesChemClass;
-      });
+      const results: CompoundSearchResult[] = pagedCompounds.map(compound => ({
+        id: compound.id,
+        cid: compound.cid,
+        name: compound.name,
+        iupacName: compound.iupacName,
+        formula: compound.formula,
+        molecularWeight: compound.molecularWeight,
+        chemicalClass: compound.chemicalClass,
+        description: compound.description,
+        similarity: 0, // No similarity score for keyword search
+        imageUrl: compound.imageUrl || this.getDefaultImageUrl(compound.cid)
+      }));
       
-      // Update total after filtering
-      totalResults = results.length;
+      // Sort the results for final presentation
+      const sortedResults = this.sortSearchResults(results, sort);
+      
+      return {
+        results: sortedResults,
+        totalResults: filteredCompounds.length,
+        page,
+        totalPages: Math.ceil(filteredCompounds.length / limit),
+        query
+      };
+    } catch (error) {
+      console.error("Error searching compounds:", error);
+      throw error;
     }
-    
-    // Apply sorting if needed for semantic search
-    if (searchType === "semantic" && sort !== "relevance") {
-      results = this.sortSearchResults(results, sort);
-    }
-    
-    return {
-      results,
-      totalResults,
-      page,
-      totalPages: Math.ceil(totalResults / limit),
-      query
-    };
   }
 
-  // Helper methods for filtering and sorting
+  // Helper methods for searching and filtering
 
   private filterByMolecularWeight(compound: Compound, filter: string): boolean {
     if (!compound.molecularWeight) return false;
     
-    switch (filter) {
+    switch(filter) {
       case "lt_100":
         return compound.molecularWeight < 100;
       case "100-200":
@@ -211,32 +207,48 @@ export class MemStorage implements IStorage {
   }
 
   private sortCompounds(compounds: Compound[], sortBy: string): Compound[] {
-    switch (sortBy) {
+    switch(sortBy) {
       case "molecular_weight":
         return [...compounds].sort((a, b) => {
-          if (!a.molecularWeight) return 1;
-          if (!b.molecularWeight) return -1;
-          return a.molecularWeight - b.molecularWeight;
+          const weightA = a.molecularWeight || 0;
+          const weightB = b.molecularWeight || 0;
+          return weightA - weightB;
         });
       case "name":
-        return [...compounds].sort((a, b) => a.name.localeCompare(b.name));
+        return [...compounds].sort((a, b) => {
+          const nameA = a.name || "";
+          const nameB = b.name || "";
+          return nameA.localeCompare(nameB);
+        });
+      case "relevance":
       default:
+        // For relevance, we keep the current order (which would be based on match quality in a real system)
         return compounds;
     }
   }
 
   private sortSearchResults(results: CompoundSearchResult[], sortBy: string): CompoundSearchResult[] {
-    switch (sortBy) {
+    switch(sortBy) {
       case "molecular_weight":
         return [...results].sort((a, b) => {
-          if (!a.molecularWeight) return 1;
-          if (!b.molecularWeight) return -1;
-          return a.molecularWeight - b.molecularWeight;
+          const weightA = a.molecularWeight || 0;
+          const weightB = b.molecularWeight || 0;
+          return weightA - weightB;
         });
       case "name":
-        return [...results].sort((a, b) => a.name.localeCompare(b.name));
+        return [...results].sort((a, b) => {
+          const nameA = a.name || "";
+          const nameB = b.name || "";
+          return nameA.localeCompare(nameB);
+        });
+      case "relevance":
       default:
-        return results;
+        // For relevance, sort by similarity score
+        return [...results].sort((a, b) => {
+          const simA = a.similarity || 0;
+          const simB = b.similarity || 0;
+          return simB - simA; // Higher similarity first
+        });
     }
   }
 
@@ -244,7 +256,7 @@ export class MemStorage implements IStorage {
     return `https://pubchem.ncbi.nlm.nih.gov/image/imagefly.cgi?cid=${cid}&width=300&height=300`;
   }
 
-  // Database initialization and data loading
+  // Data initialization methods
 
   async ensureInitialized(): Promise<void> {
     if (!this.dataInitialized) {
@@ -254,28 +266,31 @@ export class MemStorage implements IStorage {
 
   async initializeDatabase(): Promise<void> {
     try {
-      console.log("Initializing Weaviate database...");
-      await weaviateClient.initializeSchema();
+      console.log("Initializing database...");
       
-      // If there are no compounds in memory, try to load some
-      if (this.compounds.size === 0) {
-        // Create data directory if it doesn't exist
-        if (!fs.existsSync(this.dataPath)) {
-          fs.mkdirSync(this.dataPath, { recursive: true });
-          console.log(`Created data directory: ${this.dataPath}`);
-        }
-        
-        // In development, limit to 20 compounds for faster startup
-        // In production, we would load all available compounds
-        const loadLimit = process.env.NODE_ENV === 'production' ? 1000 : 20;
-        console.log(`Loading up to ${loadLimit} PubChem compounds...`);
-        await this.loadPubChemData(loadLimit);
+      // Initialize external database connections
+      try {
+        await supabaseClient.initializeDatabase();
+      } catch (error) {
+        console.error("Error initializing Supabase:", error);
+        console.log("Continuing with in-memory storage only");
       }
+      
+      try {
+        await astraDbClient.initializeSchema();
+      } catch (error) {
+        console.error("Error initializing AstraDB:", error);
+        console.log("Continuing with in-memory storage only");
+      }
+      
+      // Load sample data from files
+      const loadCount = await this.loadPubChemData(20);
+      console.log(`Loaded ${loadCount} PubChem compounds during initialization`);
       
       this.dataInitialized = true;
       console.log("Database initialization complete");
     } catch (error) {
-      console.error("Failed to initialize database:", error);
+      console.error("Error initializing database:", error);
       throw error;
     }
   }
@@ -347,8 +362,23 @@ export class MemStorage implements IStorage {
                 // Add to memory storage
                 const createdCompound = await this.createCompound(compound);
                 
-                // Add to Weaviate
-                await weaviateClient.addCompound(createdCompound);
+                // Add to Supabase relational database
+                try {
+                  await supabaseClient.addCompound(compound);
+                } catch (dbError) {
+                  console.error(`Error adding compound ${compound.cid} to Supabase:`, 
+                    dbError instanceof Error ? dbError.message : String(dbError));
+                  // Continue with in-memory storage even if Supabase fails
+                }
+                
+                // Add to AstraDB vector database  
+                try {
+                  await astraDbClient.addCompound(createdCompound);
+                } catch (dbError) {
+                  console.error(`Error adding compound ${compound.cid} to AstraDB:`, 
+                    dbError instanceof Error ? dbError.message : String(dbError));
+                  // Continue with in-memory storage even if AstraDB fails
+                }
                 
                 // Mark as processed
                 createdCompound.isProcessed = true;
